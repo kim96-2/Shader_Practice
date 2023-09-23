@@ -24,6 +24,8 @@ Shader "ShaderCode/CustomLit"
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
             #pragma multi_compile_fragment _ _SHADOWS_SOFT
 
+            #pragma multi_compile_fog
+
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl" 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"         
 
@@ -31,7 +33,8 @@ Shader "ShaderCode/CustomLit"
             {
                 float4 positionOS   : POSITION;   
                 float2 uv : TEXCOORD0;
-                float3 normal : NORMAL;              
+                float3 normal : NORMAL;       
+                
             };
 
             struct Varyings
@@ -42,6 +45,7 @@ Shader "ShaderCode/CustomLit"
                 float3 lightDir : TEXCOORD2;
                 float3 viewDir : TEXCOORD3;
                 float4 shadowCoord : TEXCOORD4;
+                float fogCoord : TEXCOORD5;
             };
 
             // To make the Unity shader SRP Batcher compatible, declare all
@@ -77,6 +81,8 @@ Shader "ShaderCode/CustomLit"
 
                 OUT.shadowCoord = GetShadowCoord(vertexInput);
 
+                OUT.fogCoord = ComputeFogFactor(OUT.positionHCS.z);
+
                 return OUT;
             }
 
@@ -89,7 +95,7 @@ Shader "ShaderCode/CustomLit"
                 Light lightInfo = GetMainLight(IN.shadowCoord);
 
                 half4 color = SAMPLE_TEXTURE2D(_MainTex,sampler_MainTex,IN.uv);
-                float NdotL = saturate(dot(IN.normal,lightInfo.direction) * 0.5 + 0.5);// 하프 램버트 방식으로 라이팅 적용
+                float NdotL = saturate(dot(IN.normal,lightInfo.direction));// 하프 램버트 방식으로 라이팅 적용
 
                 //반사광 계산(Phong)
                 //float3 reflectDir = reflect(-lightInfo.direction,IN.normal);
@@ -104,13 +110,18 @@ Shader "ShaderCode/CustomLit"
 
                 half3 ambient = SampleSH(IN.normal);//이부분 정확히 무엇을 하는지 이해 안감
 
-                half3 lighting = NdotL * lightInfo.color * lightInfo.shadowAttenuation * lightInfo.distanceAttenuation + ambient;
+                NdotL = saturate((NdotL *lightInfo.shadowAttenuation * lightInfo.distanceAttenuation) * 0.5 + 0.5);//그림자 값까지 half lambert 계산을 한 렌더링
+                half3 lighting = NdotL * lightInfo.color + ambient;
+
+                //half3 lighting = NdotL * lightInfo.color * lightInfo.shadowAttenuation * lightInfo.distanceAttenuation + ambient;
 
                 color.rgb *=lighting;
 
                 color *=_BaseColor;
 
                 color.rgb +=spec * lightInfo.shadowAttenuation * half3(1,1,1);
+
+                color.rgb = MixFog(color.rgb,IN.fogCoord);
 
                 return color;
                 
