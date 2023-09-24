@@ -26,8 +26,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _BasicLight: 0.3
     - _SpecPower: 5
     - _SpecSmoothness: 100
+    - _ToonValue: 0
     m_Colors:
     - _BaseColor: {r: 1, g: 0.24056602, b: 0.24056602, a: 1}
     - _MainColor: {r: 1, g: 0.4198113, b: 0.4198113, a: 1}

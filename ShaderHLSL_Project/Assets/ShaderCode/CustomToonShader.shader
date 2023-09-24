@@ -11,6 +11,8 @@ Shader "ShaderCode/CustomToon"
         _SpecSmoothness("Specular Smoothness",float) = 3
 
         _BasicLight("Default Light",float) = 0.3
+
+        _ToonValue("Toon Shadow Value",Range(0,1)) = 0.3
     }
 
     SubShader
@@ -59,6 +61,7 @@ Shader "ShaderCode/CustomToon"
 
                 float3 albedo;
                 float basicLight;
+
             };
 
             TEXTURE2D(_MainTex);
@@ -74,6 +77,8 @@ Shader "ShaderCode/CustomToon"
                 float _SpecSmoothness;
 
                 float _BasicLight;
+
+                float _ToonValue;
             CBUFFER_END
 
             Varyings vert(Attributes IN)
@@ -94,13 +99,16 @@ Shader "ShaderCode/CustomToon"
 
             //라이팅 계산해줄 함수
             float3 CustomLightHandler(CustomlightingData data, Light light){
-                light.shadowAttenuation =smoothstep(0.1,0.11,light.shadowAttenuation);
-                float3 lightColor = light.color * light.shadowAttenuation * light.distanceAttenuation;
+                //light.shadowAttenuation =smoothstep(0.1,0.11,light.shadowAttenuation);
+                //float3 lightColor = light.color * light.shadowAttenuation * light.distanceAttenuation;
+                float3 lightColor = light.color * light.distanceAttenuation;
                 //light.shadowAttenuation
 
                 //float NdotL = saturate(dot(data.normal,light.direction) * 0.5 + 0.5);//half lambert
                 float NdotL = saturate(dot(data.normal,light.direction));//현실적인 lambert
-                NdotL = smoothstep(0.0,0.005,NdotL);
+                //NdotL = saturate((NdotL * light.shadowAttenuation) * 0.5 + 0.5);//그림자 세기까지 더하여 half lambert 로 변환
+                //NdotL = pow(NdotL,3);
+                NdotL = smoothstep(_ToonValue + 0.0,_ToonValue + 0.005,NdotL * light.shadowAttenuation);
                 //NdotL = NdotL > 0.2 ? 1 : 0;
 
                 float spec = saturate(dot(data.normal,normalize(light.direction + data.viewDir)));//blinn Phong

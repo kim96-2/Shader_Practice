@@ -95,7 +95,8 @@ Shader "ShaderCode/CustomLit"
                 Light lightInfo = GetMainLight(IN.shadowCoord);
 
                 half4 color = SAMPLE_TEXTURE2D(_MainTex,sampler_MainTex,IN.uv);
-                float NdotL = saturate(dot(IN.normal,lightInfo.direction));// 하프 램버트 방식으로 라이팅 적용
+                float NdotL = dot(IN.normal,lightInfo.direction);// 하프 램버트 방식으로 라이팅 적용
+                NdotL = saturate(NdotL);
 
                 //반사광 계산(Phong)
                 //float3 reflectDir = reflect(-lightInfo.direction,IN.normal);
@@ -110,10 +111,11 @@ Shader "ShaderCode/CustomLit"
 
                 half3 ambient = SampleSH(IN.normal);//이부분 정확히 무엇을 하는지 이해 안감
 
-                NdotL = saturate((NdotL *lightInfo.shadowAttenuation * lightInfo.distanceAttenuation) * 0.5 + 0.5);//그림자 값까지 half lambert 계산을 한 렌더링
-                half3 lighting = NdotL * lightInfo.color + ambient;
 
-                //half3 lighting = NdotL * lightInfo.color * lightInfo.shadowAttenuation * lightInfo.distanceAttenuation + ambient;
+                //NdotL = saturate(NdotL * 0.5 + 0.5);//그림자 값까지 half lambert 계산을 한 렌더링
+                //half3 lighting = NdotL * lightInfo.color + ambient;
+
+                half3 lighting = NdotL * lightInfo.color * lightInfo.shadowAttenuation * lightInfo.distanceAttenuation + ambient;
 
                 color.rgb *=lighting;
 
@@ -122,6 +124,8 @@ Shader "ShaderCode/CustomLit"
                 color.rgb +=spec * lightInfo.shadowAttenuation * half3(1,1,1);
 
                 color.rgb = MixFog(color.rgb,IN.fogCoord);
+
+                //color.rgb = (lightInfo.shadowAttenuation*0.5 + 0.5) * NdotL * float3(1,1,1);
 
                 return color;
                 

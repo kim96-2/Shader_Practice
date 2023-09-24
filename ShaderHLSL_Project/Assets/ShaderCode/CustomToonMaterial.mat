@@ -29,6 +29,7 @@ Material:
     - _BasicLight: 0.5
     - _SpecPower: 2.4
     - _SpecSmoothness: 100
+    - _ToonValue: 0
     m_Colors:
     - _MainColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
