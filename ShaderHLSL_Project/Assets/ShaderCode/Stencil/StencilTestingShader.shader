@@ -22,8 +22,8 @@ Shader "ShaderCode/Stencil"
             Zwrite Off
             //Blend Zero One
 
-            //Cull Off
-            ColorMask 0
+            Cull Off
+            //ColorMask 0
 
 
             /*
@@ -61,7 +61,7 @@ Shader "ShaderCode/Stencil"
             half4 frag() : SV_Target
             {
                 half4 customColor;
-                customColor = half4(0.5, 0, 0, 1);
+                customColor = half4(0, 0, 0, 1);
                 return customColor;
             }
             ENDHLSL
