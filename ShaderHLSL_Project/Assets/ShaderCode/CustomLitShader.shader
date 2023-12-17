@@ -89,7 +89,7 @@ Shader "ShaderCode/CustomLit"
             half4 frag(Varyings IN) : SV_Target
             {
                 IN.normal = normalize(IN.normal);
-                IN.lightDir = normalize(IN.lightDir);
+                IN.lightDir = normalize(IN.lightDir);//이거 왜한거지...?(테스트 하다가 놔둔건가..)
                 IN.viewDir = normalize(IN.viewDir);
 
                 Light lightInfo = GetMainLight(IN.shadowCoord);
