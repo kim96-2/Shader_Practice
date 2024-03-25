@@ -69,16 +69,20 @@ Shader "ShaderCode/ShaderUsing"
 
             half4 frag(Varyings IN) : SV_Target
             {
-                //뎁스 계산
+                //현데 위치의 Depth Texture 값 계산
                 float rawDepth = SampleSceneDepth(IN.screenPos.xy / IN.screenPos.w);
                 float sceneEyeDepth = LinearEyeDepth(rawDepth,_ZBufferParams);
+                
+                //현재 위치의 오브젝트 Depth 값 계산
+                float fragmentEyeDepth = -IN.positionVS.z;
 
-                float depthDis = 1 - saturate(sceneEyeDepth + IN.positionVS.z);
+                float depthDis = 1 - saturate(sceneEyeDepth - fragmentEyeDepth);
 
-                float3 worldPos = _WorldSpaceCameraPos - ( - (IN.viewDir / IN.positionVS.z) * sceneEyeDepth);
+                //Depth Texture를 가지고 World Position을 역변환(역 계산) 하는 방법
+                float3 worldPos = _WorldSpaceCameraPos - ( (IN.viewDir / fragmentEyeDepth) * sceneEyeDepth);
 
-                return _BaseColor * float4(frac(worldPos), 1.0);
-                //return _BaseColor * depthDis;
+                //return _BaseColor * float4(frac(worldPos), 1.0);
+                return _BaseColor * depthDis;
             }
             ENDHLSL
         }
