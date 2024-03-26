@@ -62,6 +62,8 @@ Shader "ShaderCode/ScreenSpaceShader"
             {
                 Varyings OUT;
 
+                
+
                 OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
 
                 OUT.normal = TransformObjectToWorldNormal(IN.normal);
