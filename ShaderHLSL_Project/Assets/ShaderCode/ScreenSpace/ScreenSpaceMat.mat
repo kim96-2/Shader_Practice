@@ -26,7 +26,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _FrensalPower: 2.65
+    - _FrensalPower: 2.45
     - _ShadowPower: 0.384
     - _ToonValue: 0.278
     m_Colors:
