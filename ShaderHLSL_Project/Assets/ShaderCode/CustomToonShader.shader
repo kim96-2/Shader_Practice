@@ -118,8 +118,8 @@ Shader "ShaderCode/CustomToon"
                 //float3 color = data.albedo * ( 0.3 + lightColor * NdotL * (1 + spec) );
                 //float3 color = data.albedo * lightColor * NdotL + spec;
                 float3 color = data.albedo * ( data.basicLight + lightColor * NdotL);
-                color = color + smoothstep(0,1,NdotL * spec) * ( float3(1,1,1) * lightColor - color);
-
+                //color = color + smoothstep(0,1,NdotL * spec) * ( float3(1,1,1) * lightColor - color);
+                color = color + NdotL * spec;
 
                 return color;
 
@@ -151,7 +151,7 @@ Shader "ShaderCode/CustomToon"
                 data.basicLight = 0;//기본 밝기 꺼주기
                 for(uint i = 0; i < additionalLightCount; i++){
                     Light additionalLight = GetAdditionalLight(i,IN.positionWS);
-                    additionalLight.shadowAttenuation = AdditionalLightRealtimeShadow(i,IN.positionWS,additionalLight.direction);//추자적 라이트 그림자 받기 위한 끄적임
+                    additionalLight.shadowAttenuation = AdditionalLightRealtimeShadow(i,IN.positionWS,additionalLight.direction);//추가적 라이트 그림자 받기 위한 끄적임
                     additionalLight.shadowAttenuation = saturate(additionalLight.shadowAttenuation);//그림자 세기 강제적으로 약하게 해보기
                     color += CustomLightHandler(data,additionalLight);
                 }

@@ -8,6 +8,8 @@ Shader "ShaderCode/CustomLit"
         _MainTex("Main Texture",2D) = "white"{}
         _BaseColor("Base Color", Color) = (1, 1, 1, 1)
 
+        [Space(10)]
+        [Header(Specular Setting)]
         _SpecPower("Specular Power",float) = 10
     }
 
