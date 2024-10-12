@@ -7,10 +7,14 @@ Shader "ShaderCode/CustomToon"
         _MainTex("Base Map", 2D) = "white"{}
         _MainColor("Base Color",Color) = (1,1,1,1)
 
+        [Space(10)]
+        [Header(Specular Setting)]
+        [HDR]_SpecColor("Specular Color",Color) = (1,1,1,1)
         _SpecPower("Specular Power",float) = 10
         _SpecSmoothness("Specular Smoothness",float) = 3
 
-        _BasicLight("Default Light",float) = 0.3
+        [Space(15)]
+        _BasicLight("Default Light",Color) = (0.5,0.5,0.5,1)
 
         _ToonValue("Toon Shadow Value",Range(0,1)) = 0.3
     }
@@ -60,8 +64,9 @@ Shader "ShaderCode/CustomToon"
                 //float4 shadowCoord;
 
                 float3 albedo;
-                float basicLight;
+                float3 basicLight;
 
+                
             };
 
             TEXTURE2D(_MainTex);
@@ -73,10 +78,11 @@ Shader "ShaderCode/CustomToon"
 
                 float4 _MainColor;
 
+                float4 _SpecColor;
                 float _SpecPower;
                 float _SpecSmoothness;
 
-                float _BasicLight;
+                float4 _BasicLight;
 
                 float _ToonValue;
             CBUFFER_END
@@ -115,11 +121,11 @@ Shader "ShaderCode/CustomToon"
                 spec = pow(spec,_SpecSmoothness) * _SpecPower * (light.distanceAttenuation);
                 spec = smoothstep(0.98,0.981,spec); 
 
-                //float3 color = data.albedo * ( 0.3 + lightColor * NdotL * (1 + spec) );
-                //float3 color = data.albedo * lightColor * NdotL + spec;
-                float3 color = data.albedo * ( data.basicLight + lightColor * NdotL);
+
+                //float3 color = data.albedo * ( data.basicLight + lightColor * NdotL);
+                float3 color = data.albedo * lerp(data.basicLight,lightColor,NdotL);
                 //color = color + smoothstep(0,1,NdotL * spec) * ( float3(1,1,1) * lightColor - color);
-                color = color + NdotL * spec;
+                color = color + NdotL * spec * _SpecColor * light.color;
 
                 return color;
 
@@ -137,7 +143,7 @@ Shader "ShaderCode/CustomToon"
                 data.viewDir = normalize(IN.viewDir);
                 //data.shadowCoord = TransformWorldToShadowCoord(IN.positionWS);
                 data.albedo = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv).rgb * _MainColor.rgb;
-                data.basicLight = _BasicLight;
+                data.basicLight = _BasicLight.rgb;
 
                 float4 shadowCoord = TransformWorldToShadowCoord(IN.positionWS);
                 float3 color = 0;
