@@ -137,8 +137,8 @@ Shader "ShaderCode/Skin Shader"
                 //SSS 계산(참조 : https://blog.naver.com/mnpshino/221442196618)
 
                 //더 멋있는 연출을 위하여 라이트 방향을 -viewDir 로 변경
-                float3 h_SSS = normalize(-IN.viewDir + IN.normal * _Distortion);
-                //float3 h_SSS = normalize(lightInfo.direction + IN.normal * _Distortion);
+                //float3 h_SSS = normalize(-IN.viewDir + IN.normal * _Distortion);
+                float3 h_SSS = normalize(lightInfo.direction + IN.normal * _Distortion);
 
                 float VdotH_SSS = pow(saturate(dot(IN.viewDir,-h_SSS)),_SssPower) * _SssScale;
                 float3 backLight = _Attenuation * VdotH_SSS * (1 - thickness) * _SssColor.rgb;
