@@ -216,7 +216,7 @@ Shader "ShaderCode/Dissolve"
             ZWrite On
             ColorMask 0
             //Blend SrcAlpha OneMinusSrcAlpha//블렌드 스타일 적용해보기(다만 현재 Pass에서 alpha값을 변경하는게 아니라 변화 없음)
-            Cull Front
+            Cull Back
 
              HLSLPROGRAM
             #pragma exclude_renderers gles gles3 glcore

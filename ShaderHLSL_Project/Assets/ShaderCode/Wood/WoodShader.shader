@@ -85,7 +85,7 @@ Shader "ShaderCode/Wood"
                     dis += plane;
 
                     //Ray가 벽에 부디쳤을 경우 또는 너무 멀리 간 경우 나가기
-                    if(plane < SURFACE_DISTANCE || plane > MAX_DISTANCE) break;
+                    if(plane < SURFACE_DISTANCE || dis > MAX_DISTANCE) break;
                 }
 
                 return dis;
