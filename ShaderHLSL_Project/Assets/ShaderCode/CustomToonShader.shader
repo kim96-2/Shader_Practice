@@ -8,6 +8,9 @@ Shader "ShaderCode/CustomToon"
         _MainColor("Base Color",Color) = (1,1,1,1)
 
         [Space(10)]
+        [Normal]_NormalMap("Normal Map",2D) = "bump"{}
+
+        [Space(10)]
         [Header(Specular Setting)]
         [HDR]_SpecColor("Specular Color",Color) = (1,1,1,1)
         _SpecPower("Specular Power",float) = 10
@@ -43,6 +46,7 @@ Shader "ShaderCode/CustomToon"
 
                 float2 uv           : TEXCOORD0;
                 float3 normalOS     : NORMAL;
+                float4 tangentOS    : TANGENT;//노멀맵 계산용 Tangent
             };
 
             struct Varyings
@@ -51,8 +55,10 @@ Shader "ShaderCode/CustomToon"
                 float3 positionWS   : TEXCOORD0;
 
                 float2 uv           : TEXCOORD1;
-                float3 normal       : TEXCOORD2;
-                float3 viewDir      : TEXCOORD3;
+                float3 viewDir      : TEXCOORD2;
+                float3 normal       : TEXCOORD3;
+                float3 tangent      : TEXCOORD4;
+                float3 bitangent    : TEXCOORD5;
             };
 
             //커스텀 라이팅을 계산할 때 사용할 구조체
@@ -72,9 +78,14 @@ Shader "ShaderCode/CustomToon"
             TEXTURE2D(_MainTex);
             SAMPLER(sampler_MainTex);
 
+            TEXTURE2D(_NormalMap);
+            SAMPLER(sampler_NormalMap);
+
             CBUFFER_START(UnityPerMaterial)
                 
                 float4 _MainTex_ST;
+
+                float4 _NormalMap_ST;
 
                 float4 _MainColor;
 
@@ -98,7 +109,19 @@ Shader "ShaderCode/CustomToon"
 
                 OUT.positionWS = vertexInput.positionWS;
                 OUT.viewDir = normalize(_WorldSpaceCameraPos - vertexInput.positionWS);
-                OUT.normal = TransformObjectToWorldNormal(IN.normalOS);
+
+                //OUT.normal = normalize(TransformObjectToWorldNormal(IN.normalOS));
+                //OUT.tangent = normalize(TransformObjectToWorldDir(IN.tangentOS.xyz));
+                //OUT.bitangent = normalize(cross(OUT.normal , OUT.tangent) * IN.tangentOS.w);
+
+                
+                //유니티가 제공해주는 노멀 계산 함수 사용
+                VertexNormalInputs normalInput = GetVertexNormalInputs(IN.normalOS, IN.tangentOS);
+                OUT.normal = normalize(normalInput.normalWS);
+                OUT.tangent = normalize(normalInput.tangentWS);
+                OUT.bitangent = normalize(normalInput.bitangentWS);
+
+
 
                 return OUT;
             }
@@ -123,12 +146,27 @@ Shader "ShaderCode/CustomToon"
 
 
                 //float3 color = data.albedo * ( data.basicLight + lightColor * NdotL);
-                float3 color = data.albedo * lerp(data.basicLight,lightColor,NdotL);
+                float3 col = data.albedo * lerp(data.basicLight,lightColor,NdotL);
                 //color = color + smoothstep(0,1,NdotL * spec) * ( float3(1,1,1) * lightColor - color);
-                color = color + NdotL * spec * _SpecColor * light.color;
+                col = col + NdotL * spec * _SpecColor * light.color;
 
-                return color;
+                return col;
 
+            }
+
+            //노멀맵 압축 방법이라는데 한번 적용중 -> 잘못 된 식이다!!!
+            float3 DXTCompression(float4 normalMap){
+                #if defined(UNITY_NO_DXT5nm)
+                    return normalMap.rgb * 2 - 1;
+                #else
+                    float3 normalCol;
+                    normalCol = float3(normalMap.r * 2 - 1,normalMap.g * 2 - 1, 0);
+                    normalCol.b = sqrt(1 - (pow(normalCol.r, 2) - pow(normalCol.g, 2)));
+                    
+                    return normalMap.rgb * 2 - 1;
+                    return normalize(normalCol);
+
+                #endif
             }
 
             half4 frag(Varyings IN) : SV_Target
@@ -139,18 +177,33 @@ Shader "ShaderCode/CustomToon"
                 //라이팅을 위한 데이터 묶어주기
                 CustomlightingData data;
                 data.positionWS = IN.positionWS;
-                data.normal = normalize(IN.normal);
+
+                //data.normal = normalize(IN.normal);
+
+                float4 normalMap = SAMPLE_TEXTURE2D(_NormalMap,sampler_NormalMap,IN.uv);
+                float3 normal_compressed = UnpackNormal(normalMap);
+                float3x3 TBN = float3x3
+                (
+                    IN.tangent,
+                    IN.bitangent,
+                    IN.normal
+                );
+
+                data.normal = mul(normal_compressed,TBN);
+                //data.normal = normal_compressed;
+
                 data.viewDir = normalize(IN.viewDir);
+
                 //data.shadowCoord = TransformWorldToShadowCoord(IN.positionWS);
                 data.albedo = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv).rgb * _MainColor.rgb;
                 data.basicLight = _BasicLight.rgb;
-
+                
+                float3 col = 0;
                 float4 shadowCoord = TransformWorldToShadowCoord(IN.positionWS);
-                float3 color = 0;
 
-                //메인 라이트 받기
+                //메인 라이트 받기 shadowCoord
                 Light mainLight = GetMainLight(shadowCoord);
-                color += CustomLightHandler(data,mainLight);
+                col += CustomLightHandler(data,mainLight);
 
                 //추가적 라이트 받기
                 uint additionalLightCount = GetAdditionalLightsCount();
@@ -159,11 +212,11 @@ Shader "ShaderCode/CustomToon"
                     Light additionalLight = GetAdditionalLight(i,IN.positionWS);
                     additionalLight.shadowAttenuation = AdditionalLightRealtimeShadow(i,IN.positionWS,additionalLight.direction);//추가적 라이트 그림자 받기 위한 끄적임
                     additionalLight.shadowAttenuation = saturate(additionalLight.shadowAttenuation);//그림자 세기 강제적으로 약하게 해보기
-                    color += CustomLightHandler(data,additionalLight);
+                    col += CustomLightHandler(data,additionalLight);
                 }
                 
-
-                return half4(color,1);
+                //return half4(data.normal,1);
+                return half4(col,1);
             }
 
             ENDHLSL

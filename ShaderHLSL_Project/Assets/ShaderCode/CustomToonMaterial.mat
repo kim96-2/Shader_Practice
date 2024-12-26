@@ -24,12 +24,18 @@ Material:
         m_Texture: {fileID: 2800000, guid: fdffa6e36715a87479d478dbc80debb2, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 5.15, y: 0}
+    - _NormalMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - _BasicLight: 0.72
-    - _SpecPower: 2.66
-    - _SpecSmoothness: 100
+    - _SpecPower: 6
+    - _SpecSmoothness: 229.4
     - _ToonValue: 0.322
     m_Colors:
+    - _BasicLight: {r: 0.5, g: 0.5, b: 0.5, a: 1}
     - _MainColor: {r: 1, g: 1, b: 1, a: 1}
+    - _SpecColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []

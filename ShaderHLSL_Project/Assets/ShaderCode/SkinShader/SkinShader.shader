@@ -9,6 +9,9 @@ Shader "ShaderCode/Skin Shader"
         _BaseColor("Base Color", Color) = (1, 1, 1, 1)
 
         [Space(10)]
+        [Normal]_NormalMap("Normal Map",2D) = "bump"{}
+
+        [Space(10)]
         [Header(Specular Setting)]
         _SpecPower("Specular Power",float) = 10
 
@@ -46,7 +49,8 @@ Shader "ShaderCode/Skin Shader"
             {
                 float4 positionOS   : POSITION;   
                 float2 uv : TEXCOORD0;
-                float3 normal : NORMAL;       
+                float3 normalOS : NORMAL;    
+                float4 tangentOS    : TANGENT;//노멀맵 계산용 Tangent
                 
             };
 
@@ -54,12 +58,15 @@ Shader "ShaderCode/Skin Shader"
             {
                 float4 positionHCS  : SV_POSITION;
                 float2 uv : TEXCOORD0;
-                float3 normal : TEXCOORD1;
-                float3 viewDir : TEXCOORD2;
+                float3 viewDir : TEXCOORD1;
                 //float4 shadowCoord : TEXCOORD3;
-                float fogCoord : TEXCOORD3;
+                float fogCoord : TEXCOORD2;
 
-                VertexPositionInputs vertexInput: TEXCOORD4;
+                float3 normal       : TEXCOORD3;
+                float3 tangent      : TEXCOORD4;
+                float3 bitangent    : TEXCOORD5;
+
+                VertexPositionInputs vertexInput: TEXCOORD6;
             };
 
             // To make the Unity shader SRP Batcher compatible, declare all
@@ -69,6 +76,8 @@ Shader "ShaderCode/Skin Shader"
             TEXTURE2D(_MainTex);
             SAMPLER(sampler_MainTex);
 
+            TEXTURE2D(_NormalMap);
+            SAMPLER(sampler_NormalMap);
             
             TEXTURE2D(_ThicknessTex);
             SAMPLER(sampler_ThicknessTex);
@@ -77,6 +86,8 @@ Shader "ShaderCode/Skin Shader"
                 // The following line declares the _BaseColor variable, so that you
                 // can use it in the fragment shader.
                 float4 _MainTex_ST;
+
+                float4 _NormalMap_ST;
 
                 half4 _BaseColor;       
                 float _SpecPower;     
@@ -100,9 +111,15 @@ Shader "ShaderCode/Skin Shader"
                 //OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
                 OUT.positionHCS = OUT.vertexInput.positionCS;
                 OUT.uv = TRANSFORM_TEX(IN.uv , _MainTex);
-                OUT.normal = TransformObjectToWorldNormal(IN.normal);
+                //OUT.normal = TransformObjectToWorldNormal(IN.normal);
 
                 OUT.viewDir = normalize(_WorldSpaceCameraPos - OUT.vertexInput.positionWS);
+
+                //유니티가 제공해주는 노멀 계산 함수 사용
+                VertexNormalInputs normalInput = GetVertexNormalInputs(IN.normalOS, IN.tangentOS);
+                OUT.normal = normalize(normalInput.normalWS);
+                OUT.tangent = normalize(normalInput.tangentWS);
+                OUT.bitangent = normalize(normalInput.bitangentWS);
 
                 //OUT.shadowCoord = GetShadowCoord(vertexInput);
 
@@ -113,7 +130,16 @@ Shader "ShaderCode/Skin Shader"
 
             half4 frag(Varyings IN) : SV_Target
             {
-                IN.normal = normalize(IN.normal);
+                float3 normal_compressed = UnpackNormal(SAMPLE_TEXTURE2D(_NormalMap,sampler_NormalMap,IN.uv));
+                float3x3 TBN = float3x3
+                (
+                    normalize(IN.tangent),
+                    normalize(IN.bitangent),
+                    normalize(IN.normal)
+                );
+                IN.normal = mul(normal_compressed,TBN);
+
+
                 IN.viewDir = normalize(IN.viewDir);
 
                 Light lightInfo = GetMainLight(GetShadowCoord(IN.vertexInput));
