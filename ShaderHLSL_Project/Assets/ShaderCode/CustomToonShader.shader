@@ -59,6 +59,10 @@ Shader "ShaderCode/CustomToon"
                 float3 normal       : TEXCOORD3;
                 float3 tangent      : TEXCOORD4;
                 float3 bitangent    : TEXCOORD5;
+
+                //test
+                float3 normalOS     : TEXCOORD6;
+                float4 tangentOS    : TEXCOORD7;
             };
 
             //커스텀 라이팅을 계산할 때 사용할 구조체
@@ -121,7 +125,8 @@ Shader "ShaderCode/CustomToon"
                 OUT.tangent = normalize(normalInput.tangentWS);
                 OUT.bitangent = normalize(normalInput.bitangentWS);
 
-
+                OUT.normalOS = IN.normalOS;
+                OUT.tangentOS = IN.tangentOS;
 
                 return OUT;
             }
@@ -182,11 +187,13 @@ Shader "ShaderCode/CustomToon"
 
                 float4 normalMap = SAMPLE_TEXTURE2D(_NormalMap,sampler_NormalMap,IN.uv);
                 float3 normal_compressed = UnpackNormal(normalMap);
+
+                VertexNormalInputs normalInput = GetVertexNormalInputs(IN.normalOS, IN.tangentOS);
                 float3x3 TBN = float3x3
                 (
-                    IN.tangent,
-                    IN.bitangent,
-                    IN.normal
+                    normalInput.tangentWS,
+                    normalInput.bitangentWS,
+                    normalInput.normalWS
                 );
 
                 data.normal = mul(normal_compressed,TBN);
@@ -230,7 +237,7 @@ Shader "ShaderCode/CustomToon"
 
             ZWrite On
             ColorMask 0
-            Cull Front 
+            Cull Back
 
              HLSLPROGRAM
             #pragma exclude_renderers gles gles3 glcore

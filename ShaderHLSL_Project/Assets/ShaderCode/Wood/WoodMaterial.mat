@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: CustomToonMaterial
-  m_Shader: {fileID: 4800000, guid: f8d1d2446dd01934a86de6314fa670c4, type: 3}
+  m_Name: WoodMaterial
+  m_Shader: {fileID: 4800000, guid: 2ea41fc6abbfbda42a8f35492ea97e84, type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 4
@@ -21,21 +21,16 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: fdffa6e36715a87479d478dbc80debb2, type: 3}
+        m_Texture: {fileID: 2800000, guid: 51b893a061ebdcc4c88f869ee1d774a4, type: 3}
         m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 5.15, y: 0}
-    - _NormalMap:
-        m_Texture: {fileID: 0}
+        m_Offset: {x: 0, y: 0}
+    - _PlaneTex:
+        m_Texture: {fileID: 2800000, guid: 8ed6260a1f8827d488c164426293cdd6, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _BasicLight: 0.72
-    - _SpecPower: 72.82
-    - _SpecSmoothness: 340
-    - _ToonValue: 0.66
+    - _Edge: 0.22
     m_Colors:
-    - _BasicLight: {r: 0.5, g: 0.5, b: 0.5, a: 1}
-    - _MainColor: {r: 1, g: 1, b: 1, a: 1}
-    - _SpecColor: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []

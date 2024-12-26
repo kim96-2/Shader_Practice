@@ -46,8 +46,10 @@ Shader "ShaderCode/CustomLit"
                 float3 normal : TEXCOORD1;
                 float3 lightDir : TEXCOORD2;
                 float3 viewDir : TEXCOORD3;
-                float4 shadowCoord : TEXCOORD4;
-                float fogCoord : TEXCOORD5;
+                //float4 shadowCoord : TEXCOORD4;
+                float fogCoord : TEXCOORD4;
+
+                VertexPositionInputs vertexInput : TEXCOORD5;
             };
 
             // To make the Unity shader SRP Batcher compatible, declare all
@@ -81,9 +83,11 @@ Shader "ShaderCode/CustomLit"
 
                 OUT.viewDir = normalize(_WorldSpaceCameraPos - vertexInput.positionWS);
 
-                OUT.shadowCoord = GetShadowCoord(vertexInput);
+                //OUT.shadowCoord = GetShadowCoord(vertexInput);
 
                 OUT.fogCoord = ComputeFogFactor(OUT.positionHCS.z);
+
+                OUT.vertexInput = vertexInput;
 
                 return OUT;
             }
@@ -94,7 +98,8 @@ Shader "ShaderCode/CustomLit"
                 IN.lightDir = normalize(IN.lightDir);//이거 왜한거지...?(테스트 하다가 놔둔건가..)
                 IN.viewDir = normalize(IN.viewDir);
 
-                Light lightInfo = GetMainLight(IN.shadowCoord);
+                float4 shadowCoord = GetShadowCoord(IN.vertexInput);
+                Light lightInfo = GetMainLight(shadowCoord);
 
                 half4 color = SAMPLE_TEXTURE2D(_MainTex,sampler_MainTex,IN.uv);
                 float NdotL = dot(IN.normal,lightInfo.direction);// 하프 램버트 방식으로 라이팅 적용

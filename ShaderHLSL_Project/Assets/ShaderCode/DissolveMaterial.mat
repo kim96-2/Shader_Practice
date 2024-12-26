@@ -31,9 +31,9 @@ Material:
     m_Ints: []
     m_Floats:
     - _Cutoff: 0.43
-    - _CutoffHeight: 0.104
+    - _CutoffHeight: 0.18
     - _GlowSize: 0.059
     - _NoisePower: 0.186
     m_Colors:
-    - _MainColor: {r: 3.482202, g: 0.5091899, b: 0.5091899, a: 1}
+    - _MainColor: {r: 24.251463, g: 0.7778755, b: 0.7778755, a: 1}
   m_BuildTextureStacks: []
