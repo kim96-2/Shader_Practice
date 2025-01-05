@@ -87,7 +87,7 @@ Material:
     m_Ints: []
     m_Floats:
     - _AlphaClip: 0
-    - _Attenuation: 2.19
+    - _Attenuation: 3.39
     - _Blend: 0
     - _BumpScale: 1
     - _ClearCoatMask: 0
@@ -96,7 +96,7 @@ Material:
     - _Cutoff: 0.5
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
-    - _Distortion: 0.94
+    - _Distortion: 0.44
     - _DstBlend: 0
     - _EnvironmentReflections: 1
     - _GlossMapScale: 0
@@ -112,8 +112,8 @@ Material:
     - _SpecPower: 47.44
     - _SpecularHighlights: 1
     - _SrcBlend: 1
-    - _SssPower: 4.86
-    - _SssScale: 3.69
+    - _SssPower: 5
+    - _SssScale: 0.43
     - _Surface: 0
     - _WorkflowMode: 1
     - _ZWrite: 1

@@ -93,7 +93,7 @@ Shader "ShaderCode/ScreenSpaceShader"
                 half2 sUV = IN.screenPos.xy / IN.screenPos.w;
 
                 half4 col;
-                col = SAMPLE_TEXTURE2D(_MainTex,sampler_MainTex, sUV);
+                col = SAMPLE_TEXTURE2D(_MainTex,sampler_MainTex, sUV + half2(0, _Time.y * 0.1));
                 //col = half4(ss,0,1);
                 
 

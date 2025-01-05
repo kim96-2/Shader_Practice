@@ -114,7 +114,7 @@ Shader "ShaderCode/LavaLamp"
                 float sp3 = SphereSDF(pos,sphere3.xyz , sphere3.w);
                 float sp4 = SphereSDF(pos,sphere4.xyz , sphere4.w);
 
-                float cylinder = RoundCylinderSDF(pos,float3(0,0,0),0.3,0.1,0.9);
+                float cylinder = RoundCylinderSDF(pos,float3(0,0,0),0.235,0.1,0.9);
 
                 float dis = SmoothUnion(sp1,sp2, _Smoothness);
                 dis = SmoothUnion(dis, sp3, _Smoothness);
