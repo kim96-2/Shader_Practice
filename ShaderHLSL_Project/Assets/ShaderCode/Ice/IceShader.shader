@@ -14,6 +14,7 @@ Shader "ShaderCode/Ice"
         [Header(Ice Setting)]//Ice 관련 변수들
         [Space(5)]
         [HDR]_IceColor("Ice Color",color) = (1,1,1,1)
+        _IceAlpha("Ice Noise Alpha",Range(0,1)) = 0.5 
         _IceTex("Ice Texture",2D) = "white"{}
 
         [Space(5)]
@@ -34,6 +35,8 @@ Shader "ShaderCode/Ice"
 
         Pass
         {
+            Cull Off
+
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
@@ -97,7 +100,7 @@ Shader "ShaderCode/Ice"
                 float _RefractionAmount;
 
                 float4 _IceTex_ST;
-                //float4 _IceTex_TexelSize;
+                float _IceAlpha;
 
                 float _IceDepth;
 
@@ -220,7 +223,7 @@ Shader "ShaderCode/Ice"
                 float3 baseCol = lerp(albedo,refractCol,_RefractionAmount) * _BaseColor;
 
                 //전체 라이팅 계산
-                float4 col = lerp(float4(baseCol,1),_IceColor,1 - finalIceNoise);
+                float4 col = lerp(float4(baseCol,1),_IceColor,(1 - finalIceNoise) * _IceAlpha);
                 col.rgb *= lightColor;
 
                 return col;

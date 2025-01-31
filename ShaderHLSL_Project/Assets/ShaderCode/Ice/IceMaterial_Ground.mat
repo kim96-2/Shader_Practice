@@ -34,6 +34,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _IceAlpha: 0.66
     - _IceDepth: 0.18
     - _IceDepth2: 0.74
     - _RefractNormalAmount: 0.08
