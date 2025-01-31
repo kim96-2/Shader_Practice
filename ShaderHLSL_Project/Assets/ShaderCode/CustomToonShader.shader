@@ -159,21 +159,6 @@ Shader "ShaderCode/CustomToon"
 
             }
 
-            //노멀맵 압축 방법이라는데 한번 적용중 -> 잘못 된 식이다!!!
-            float3 DXTCompression(float4 normalMap){
-                #if defined(UNITY_NO_DXT5nm)
-                    return normalMap.rgb * 2 - 1;
-                #else
-                    float3 normalCol;
-                    normalCol = float3(normalMap.r * 2 - 1,normalMap.g * 2 - 1, 0);
-                    normalCol.b = sqrt(1 - (pow(normalCol.r, 2) - pow(normalCol.g, 2)));
-                    
-                    return normalMap.rgb * 2 - 1;
-                    return normalize(normalCol);
-
-                #endif
-            }
-
             half4 frag(Varyings IN) : SV_Target
             {
                 // The SAMPLE_TEXTURE2D marco samples the texture with the given
