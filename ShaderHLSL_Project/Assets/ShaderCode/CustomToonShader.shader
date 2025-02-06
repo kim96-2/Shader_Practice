@@ -195,6 +195,7 @@ Shader "ShaderCode/CustomToon"
 
                 //메인 라이트 받기 shadowCoord
                 Light mainLight = GetMainLight(shadowCoord);
+                //return mainLight.shadowAttenuation;
                 col += CustomLightHandler(data,mainLight);
 
                 //추가적 라이트 받기

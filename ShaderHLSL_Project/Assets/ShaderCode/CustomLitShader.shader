@@ -1,12 +1,11 @@
+//2025-02-06 : 위 쉐이더를 Phong Shading 계산 법으로 변경함과 동시에 정리 진행
 Shader "ShaderCode/CustomLit"
 {    
-    // The _BaseColor variable is visible in the Material's Inspector, as a field 
-    // called Base Color. You can use it to select a custom color. This variable
-    // has the default value (1, 1, 1, 1).
     Properties
     { 
-        _MainTex("Main Texture",2D) = "white"{}
         _BaseColor("Base Color", Color) = (1, 1, 1, 1)
+        _MainTex("Main Texture",2D) = "white"{}
+        _NormalMap("NormalMap Texture",2D) = "bump"{}
 
         [Space(10)]
         [Header(Specular Setting)]
@@ -23,7 +22,9 @@ Shader "ShaderCode/CustomLit"
             #pragma vertex vert
             #pragma fragment frag
 
-            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
+            //그림자와 추가적 라이트를 위한 선언
+            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE 
+            #pragma multi_compile _ _ADDITIONAL_LIGHT_SHADOWS
             #pragma multi_compile_fragment _ _SHADOWS_SOFT
 
             #pragma multi_compile_fog
@@ -34,35 +35,44 @@ Shader "ShaderCode/CustomLit"
             struct Attributes
             {
                 float4 positionOS   : POSITION;   
-                float2 uv : TEXCOORD0;
-                float3 normal : NORMAL;       
-                
+                float2 uv           : TEXCOORD0;
+                float3 normal       : NORMAL;       
+                float4 tangentOS    : TANGENT;//노멀맵 계산용 Tangent
             };
 
             struct Varyings
             {
                 float4 positionHCS  : SV_POSITION;
-                float2 uv : TEXCOORD0;
-                float3 normal : TEXCOORD1;
-                float3 lightDir : TEXCOORD2;
-                float3 viewDir : TEXCOORD3;
-                //float4 shadowCoord : TEXCOORD4;
-                float fogCoord : TEXCOORD4;
+                float2 uv           : TEXCOORD0;
+                float3 viewDir      : TEXCOORD1;
+                float fogCoord      : TEXCOORD2;
 
-                VertexPositionInputs vertexInput : TEXCOORD5;
+                float3 positionWS   : TEXCOORD3;
+
+                //NormalMap 계산용
+                float3 normal       : TEXCOORD4;
+                float3 tangent      : TEXCOORD5;
+                float3 bitangent    : TEXCOORD6;
             };
 
-            // To make the Unity shader SRP Batcher compatible, declare all
-            // properties related to a Material in a a single CBUFFER block with 
-            // the name UnityPerMaterial.
+            //라이팅 계산할 때 필요한 변수들 정리한 구조체 변수
+            struct CustomLightingData
+            {
+                float3 normal;
+                float3 viewDir;
+            };
 
             TEXTURE2D(_MainTex);
             SAMPLER(sampler_MainTex);
+
+            TEXTURE2D(_NormalMap);
+            SAMPLER(sampler_NormalMap);
 
             CBUFFER_START(UnityPerMaterial)
                 // The following line declares the _BaseColor variable, so that you
                 // can use it in the fragment shader.
                 float4 _MainTex_ST;
+                float4 _NormalMap_ST;
 
                 half4 _BaseColor;       
                 float _SpecPower;     
@@ -76,70 +86,91 @@ Shader "ShaderCode/CustomLit"
                 
                 //OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
                 OUT.positionHCS = vertexInput.positionCS;
-                OUT.uv = TRANSFORM_TEX(IN.uv , _MainTex);
+                //OUT.uv = TRANSFORM_TEX(IN.uv , _MainTex);
+                OUT.uv = IN.uv;
                 OUT.normal = TransformObjectToWorldNormal(IN.normal);
-
-                OUT.lightDir = normalize(_MainLightPosition.xyz);
 
                 OUT.viewDir = normalize(_WorldSpaceCameraPos - vertexInput.positionWS);
 
-                //OUT.shadowCoord = GetShadowCoord(vertexInput);
+                OUT.positionWS = vertexInput.positionWS;
+                //OUT.positionWS = TransformObjectToWorld(IN.positionOS.xyz);
 
                 OUT.fogCoord = ComputeFogFactor(OUT.positionHCS.z);
 
-                OUT.vertexInput = vertexInput;
+                //유니티가 제공해주는 노멀 계산 함수 사용
+                VertexNormalInputs normalInput = GetVertexNormalInputs(IN.normal, IN.tangentOS);
+                OUT.normal = normalize(normalInput.normalWS);
+                OUT.tangent = normalize(normalInput.tangentWS);
+                OUT.bitangent = normalize(normalInput.bitangentWS);
+                
 
                 return OUT;
             }
 
+            float3 CaculateLighting(CustomLightingData data, Light light)
+            {
+                float NdotL = saturate(dot(data.normal,light.direction));
+
+                float NdotH = saturate(dot(data.normal,normalize(light.direction + data.viewDir)));//blinn Phong
+                float spec = pow(NdotH,_SpecPower) * NdotL;
+
+                //return light.shadowAttenuation;
+                return light.color * light.distanceAttenuation * light.shadowAttenuation * (NdotL + spec);
+            }
+
             half4 frag(Varyings IN) : SV_Target
             {
-                IN.normal = normalize(IN.normal);
-                IN.lightDir = normalize(IN.lightDir);//이거 왜한거지...?(테스트 하다가 놔둔건가..)
                 IN.viewDir = normalize(IN.viewDir);
 
-                float4 shadowCoord = GetShadowCoord(IN.vertexInput);
-                Light lightInfo = GetMainLight(shadowCoord);
+                //노멀맵 계산
+                float2 normalMapUV = TRANSFORM_TEX(IN.uv , _NormalMap);
+                float4 normalMap = SAMPLE_TEXTURE2D(_NormalMap,sampler_NormalMap,normalMapUV);
+                float3 normal_compressed = UnpackNormal(normalMap);
 
-                half4 color = SAMPLE_TEXTURE2D(_MainTex,sampler_MainTex,IN.uv);
-                float NdotL = dot(IN.normal,lightInfo.direction);// 하프 램버트 방식으로 라이팅 적용
-                NdotL = saturate(NdotL);
+                float3x3 TBN = float3x3
+                (
+                    normalize(IN.tangent),
+                    normalize(IN.bitangent),
+                    normalize(IN.normal)
+                );
+                float3 normalWS = mul(normal_compressed,TBN);
 
-                //반사광 계산(Phong)
-                //float3 reflectDir = reflect(-lightInfo.direction,IN.normal);
-                //half spec = saturate(dot(reflectDir,IN.viewDir));
+                //라이트 계산을 위한 변수들 정리
+                CustomLightingData data = (CustomLightingData)0;
+                data.viewDir = IN.viewDir;
+                data.normal = normalWS;
+
+                float4 shadowCoord = TransformWorldToShadowCoord(IN.positionWS);
+
+                float3 lightColor = 0;
+
+                //메인 라이트 계산
+                Light mainLight = GetMainLight(shadowCoord);
+                lightColor += CaculateLighting(data,mainLight);
+
+                //추가적 라이트 계산
+                uint additionalLightCount = GetAdditionalLightsCount();
+                for(uint i = 0; i < additionalLightCount; i++)
+                {
+                    Light additionalLight = GetAdditionalLight(i,IN.positionWS);
+                    additionalLight.shadowAttenuation = AdditionalLightRealtimeShadow(i,IN.positionWS,additionalLight.direction);
+
+                    lightColor += CaculateLighting(data,additionalLight);
+                }
+
+                float2 mainTexUV = TRANSFORM_TEX(IN.uv , _MainTex);
+                half4 col = SAMPLE_TEXTURE2D(_MainTex,sampler_MainTex,mainTexUV) * _BaseColor;
                 
+                col.rgb *= SampleSH(normalWS) + lightColor;
 
-                //반사광 계산(BlinnPhong)
-                float3 h = normalize(lightInfo.direction + IN.viewDir);
-                half spec = saturate(dot(h,IN.normal));
+                //color.rgb = MixFog(color.rgb,IN.fogCoord);
 
-                spec = pow(spec,_SpecPower);
-
-                half3 ambient = SampleSH(IN.normal);//이부분 정확히 무엇을 하는지 이해 안감
-
-
-                //NdotL = saturate(NdotL * 0.5 + 0.5);//그림자 값까지 half lambert 계산을 한 렌더링
-                //half3 lighting = NdotL * lightInfo.color + ambient;
-
-                half3 lighting = NdotL * lightInfo.color * lightInfo.shadowAttenuation * lightInfo.distanceAttenuation + ambient;
-
-                color.rgb *=lighting;
-
-                color *=_BaseColor;
-
-                color.rgb +=spec * lightInfo.shadowAttenuation * half3(1,1,1);
-
-                color.rgb = MixFog(color.rgb,IN.fogCoord);
-
-                //color.rgb = (lightInfo.shadowAttenuation*0.5 + 0.5) * NdotL * float3(1,1,1);
-
-                return color;
+                return col;
                 
             }
             ENDHLSL
         }
-        //UsePass "Universal Render Pipeline/Lit/ShadowCaster"다른 쉐이더의 패스를 가져올 수 있음
+        //UsePass "Universal Render Pipeline/Lit/ShadowCaster"//다른 쉐이더의 패스를 가져올 수 있음
         Pass//또는 이렇게 새로운 패스를 만들고 이미 만들어진 hlsl 셰이더를 가져올 수 있다
         {
             Name "ShadowCaster"
@@ -148,7 +179,7 @@ Shader "ShaderCode/CustomLit"
             ZWrite On
             ZTest LEqual
             ColorMask 0
-            Cull Front
+            Cull Off
 
             HLSLPROGRAM
 
