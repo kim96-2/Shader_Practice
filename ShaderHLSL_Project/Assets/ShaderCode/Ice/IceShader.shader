@@ -185,7 +185,7 @@ Shader "ShaderCode/Ice"
                 //    dot(viewDir,IN.normal)
                 //    );
 
-                float3 reflectView = reflect(-tangentView,normalMap_compressed);
+                float3 reflectView = reflect(-tangentView,TransformWorldToTangent(normalMap_compressed,TBN));
                 //iceUV += reflectView.xy * (_IceDepth / abs(reflectView.z)) / _IceTex_TexelSize.z;
 
                 
