@@ -5718,7 +5718,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!65 &1308238172
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -7234,7 +7234,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!65 &1492029619
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -8180,6 +8180,7 @@ GameObject:
   - component: {fileID: 1884059318}
   - component: {fileID: 1884059317}
   - component: {fileID: 1884059316}
+  - component: {fileID: 1884059320}
   m_Layer: 0
   m_Name: Parallax Theater
   m_TagString: Untagged
@@ -8258,7 +8259,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1884059315}
-  m_LocalRotation: {x: 0, y: 0.9984408, z: -0, w: -0.05582139}
+  m_LocalRotation: {x: 0, y: 0.9989507, z: 0, w: 0.04579892}
   m_LocalPosition: {x: -14.519, y: 2.882, z: 7.267}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -8268,7 +8269,20 @@ Transform:
   - {fileID: 1991215221}
   m_Father: {fileID: 0}
   m_RootOrder: 24
-  m_LocalEulerAnglesHint: {x: 0, y: 186.4, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -1265.25, z: 0}
+--- !u!114 &1884059320
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1884059315}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33acc17d50090b94bad5d0058dca4327, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotateSpeed: 10
 --- !u!1 &1885109255
 GameObject:
   m_ObjectHideFlags: 0
@@ -8320,7 +8334,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!65 &1991215218
 BoxCollider:
   m_ObjectHideFlags: 0
