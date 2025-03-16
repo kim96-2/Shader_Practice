@@ -9,6 +9,7 @@ Shader "ShaderCode/TiltShift_v2"
 
         [Space(15)]
         _MaxGridSize ("Max Grid Size", Integer) = 3
+        _BlurStep ("Blur Step Size" , Range(1, 5)) = 2.0
 
         [Space(15)]
         _TiltCenter("Tilt Center", Float) = 30
@@ -17,6 +18,7 @@ Shader "ShaderCode/TiltShift_v2"
 
         [Space(15)]
         _Spread ("Blur Spread" , float) = 1.0
+        
     }
     SubShader
     {
@@ -38,6 +40,7 @@ Shader "ShaderCode/TiltShift_v2"
         float _Spread;
 
         int _MaxGridSize;
+        float _BlurStep;
 
         float _TiltCenter;
         float _TiltNotBlurRange;
@@ -119,10 +122,10 @@ Shader "ShaderCode/TiltShift_v2"
                 {
                     float gauss = gaussian(x);
      
-                    float2 uv = IN.uv + float2(1.0 , 0.0) * _MainTex_TexelSize.x * (float)x;
+                    float2 uv = IN.uv + float2(1.0 , 0.0) * _MainTex_TexelSize.x * (float)x * _BlurStep;
 
                     //Tilt Blur 량을 고려해서 블러 넣어줌
-                    gauss *= CalculateTiltBlurAmount(uv);
+                    //gauss *= CalculateTiltBlurAmount(uv);
                     gridSum += gauss;
 
                     col += gauss * SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv).rgb;
@@ -164,10 +167,10 @@ Shader "ShaderCode/TiltShift_v2"
                 {
                     float gauss = gaussian(y);
                     
-                    float2 uv = IN.uv + float2(0.0 , 1.0) * _MainTex_TexelSize.y * (float)y;
+                    float2 uv = IN.uv + float2(0.0 , 1.0) * _MainTex_TexelSize.y * (float)y * _BlurStep;
 
                     //Tilt Blur 량을 고려해서 블러 넣어줌
-                    gauss *= CalculateTiltBlurAmount(uv);
+                    //gauss *= CalculateTiltBlurAmount(uv);
                     gridSum += gauss;
 
                     col += gauss * SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv).rgb;

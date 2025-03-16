@@ -204,10 +204,10 @@ MonoBehaviour:
     m_Value: 300
   bladeCount:
     m_OverrideState: 0
-    m_Value: 4
+    m_Value: 3
   bladeCurvature:
     m_OverrideState: 0
-    m_Value: 0.655
+    m_Value: 0.1
   bladeRotation:
     m_OverrideState: 0
     m_Value: 37
