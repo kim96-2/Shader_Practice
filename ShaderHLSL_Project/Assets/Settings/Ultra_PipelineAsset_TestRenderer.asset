@@ -1,5 +1,19 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-5297221747736789834
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bece72ed520ebf44e9c566fbd8d9ec6a, type: 3}
+  m_Name: StencilLightingRendererFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  renderPassEvent: 500
 --- !u!114 &-4944047284962980486
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -41,7 +55,7 @@ MonoBehaviour:
     layerMask:
       serializedVersion: 2
       m_Bits: 64
-  renderPassEvent: 300
+  renderPassEvent: 400
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -60,7 +74,8 @@ MonoBehaviour:
   - {fileID: -4944047284962980486}
   - {fileID: 1059602371675813136}
   - {fileID: -1777286509892573833}
-  m_RendererFeatureMap: 7a0d0c63303763bb10f5e536be76b40e7765c2f155cf55e7
+  - {fileID: -5297221747736789834}
+  m_RendererFeatureMap: 7a0d0c63303763bb10f5e536be76b40e7765c2f155cf55e7b6bcace5e27c7cb6
   m_UseNativeRenderPass: 0
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   xrSystemData: {fileID: 11400000, guid: 60e1133243b97e347b653163a8c01b64, type: 2}
@@ -117,4 +132,4 @@ MonoBehaviour:
     layerMask:
       serializedVersion: 2
       m_Bits: 64
-  renderPassEvent: 300
+  renderPassEvent: 400
