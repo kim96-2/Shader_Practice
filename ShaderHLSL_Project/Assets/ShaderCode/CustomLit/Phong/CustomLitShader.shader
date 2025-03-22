@@ -152,8 +152,20 @@ Shader "ShaderCode/CustomLit"
                 uint additionalLightCount = GetAdditionalLightsCount();
                 for(uint i = 0; i < additionalLightCount; i++)
                 {
-                    Light additionalLight = GetAdditionalLight(i,IN.positionWS);
-                    additionalLight.shadowAttenuation = AdditionalLightRealtimeShadow(i,IN.positionWS,additionalLight.direction);
+                    //추가 라이트 그림자까지 계산해주는 함수 (3번째 인자로 shadowMask 인자 추가)
+                    Light additionalLight = GetAdditionalLight(i, IN.positionWS, half4(1, 1, 1, 1));
+
+                    /*
+                    //실시간 additionalLight 계산 수정(shadowFade 적용)
+                    #ifdef MAIN_LIGHT_CALCULATE_SHADOWS
+                    half realtimeShadow = AdditionalLightRealtimeShadow(i, IN.positionWS, additionalLight.direction);
+                    half shadowFade = GetAdditionalLightShadowFade(IN.positionWS);
+
+                    additionalLight.shadowAttenuation = lerp(realtimeShadow, 1, shadowFade);
+                    #else
+                    additionalLight.shadowAttenuation = 1.0;
+                    #endif
+                    */
 
                     lightColor += CaculateLighting(data,additionalLight);
                 }
@@ -179,7 +191,7 @@ Shader "ShaderCode/CustomLit"
             ZWrite On
             ZTest LEqual
             ColorMask 0
-            Cull Off
+            Cull front
 
             HLSLPROGRAM
 
