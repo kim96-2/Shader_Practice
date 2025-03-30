@@ -24,12 +24,21 @@ Material:
         m_Texture: {fileID: 8900000, guid: 9a68b72f87307d04aab3765508af243f, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _DifractionNormalMap:
+        m_Texture: {fileID: 2800000, guid: c861b4a2c4b494d40b52e23e52f943bb, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _LayerTex:
         m_Texture: {fileID: 18700000, guid: 14a2a1ec22d5d714eaa5bfea2563af63, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _RampTex:
+        m_Texture: {fileID: 2800000, guid: 67953c74e3eba27409f2cd9e53c86d0f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _DifractionAmount: 0.35
     - _LayerCounts: 8
     - _LayerOffset: 0.01
     m_Colors:

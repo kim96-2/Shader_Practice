@@ -13,6 +13,11 @@ Shader "ShaderCode/ParallaxMapping_v1"
         _LayerTex("Layer Textures",2DArray) = "black" {}
 
         _LayerOffset("Layer Start Offset",Range(0,1)) = 0.1
+
+        [Header(Difraction Setting)]
+        _RampTex("Ramp Texture", 2D) = "black" {}
+        _DifractionNormalMap("Difraction Normal Map", 2D) = "bump"{} 
+        _DifractionAmount("Difraction Amount", Range(0, 1)) = 0.5
         
     }
 
@@ -62,11 +67,21 @@ Shader "ShaderCode/ParallaxMapping_v1"
             TEXTURECUBE(_BackgroundCubeMap);
             SAMPLER(sampler_BackgroundCubeMap);
 
+            TEXTURE2D(_RampTex);
+            SAMPLER(sampler_RampTex);
+
+            TEXTURE2D(_DifractionNormalMap);
+            SAMPLER(sampler_DifractionNormalMap);
+
             CBUFFER_START(UnityPerMaterial)
                 float4 _BaseColor;
 
                 int _LayerCounts;
                 float _LayerOffset;
+
+                float4 _DifractionNormalMap_ST;
+
+                float _DifractionAmount;
                 
             CBUFFER_END
 
@@ -143,7 +158,7 @@ Shader "ShaderCode/ParallaxMapping_v1"
                 //    dot(viewDir,IN.bitangent),
                 //    dot(viewDir,IN.normal)
                 //    );
-                float3 reflectView = reflect(-tangentView,float3(0,0,1));
+                float3 reflectViewTS = reflect(-tangentView,float3(0,0,1));
 
                 float4 finalCol = _BaseColor;
 
@@ -152,9 +167,19 @@ Shader "ShaderCode/ParallaxMapping_v1"
                 int layerNum = _LayerCounts;
                 for(int i = layerNum - 1 ; i >=0 ; i --){
                     finalCol = AlphaBlend(
-                                SampleLayerTexture(i,(1.0 -  (float)(layerNum - i) /layerNum) * (1 - _LayerOffset) + _LayerOffset,IN.uv,reflectView),
+                                SampleLayerTexture(i,(1.0 -  (float)(layerNum - i) /layerNum) * (1 - _LayerOffset) + _LayerOffset,IN.uv,reflectViewTS),
                                 finalCol);
                 }
+
+                float3 reflectViewOS = TransformWorldToObject(reflect(-viewDir, IN.normal));
+
+                float3 difractionNormalMap = UnpackNormal(SAMPLE_TEXTURE2D(_DifractionNormalMap, sampler_DifractionNormalMap, TRANSFORM_TEX(IN.uv, _DifractionNormalMap)));
+
+                float2 difractionUV = difractionNormalMap.xy + _WorldSpaceCameraPos.xx + reflectViewOS.xy;
+                difractionUV += IN.uv + tangentView.xy;
+                
+                half3 ramp = SAMPLE_TEXTURE2D(_RampTex,sampler_RampTex, difractionUV).rgb;
+                finalCol.rgb += ramp * _DifractionAmount;;
 
                 return finalCol;
 
