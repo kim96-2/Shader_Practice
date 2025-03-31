@@ -7,12 +7,12 @@ Shader "ShaderCode/ParallaxMapping_v2"
 
         [Header(Layer Setting)]
         _LayerCounts("Layer Counts",int) = 4
-        _LayerTex("Layer Textures",2DArray) = "black" {}
+        _LayerTex("Layer Textures",2DArray) = "white" {}
 
         _LayerOffset("Layer Start Offset",Range(0,1)) = 0.1
 
         [Header(Difraction Setting)]
-        _RampTex("Ramp Texture", 2D) = "black" {}
+        _RampTex("Ramp Texture", 2D) = "white" {}
         _DifractionNormalMap("Difraction Normal Map", 2D) = "bump"{} 
 
         _DifractionAmount("Dirfaction Amount", Range(0, 1)) = 0.5
