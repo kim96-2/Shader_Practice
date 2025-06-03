@@ -15,8 +15,8 @@ uint _Resolution;
 float _Time;
 
 float2 GetUV (uint3 id) {
-	//return (id.xy + 0.5) - 1.0;
-    return id.xy - _Resolution / 2.0;
+	//return (id.xy / (float)_Resolution);
+    return (id.xy + 0.5) * 2.0 / _Resolution - 1.0;
 }
 
 void SetCube (uint3 id, float3 position, float4 color) {
@@ -34,19 +34,27 @@ void SetCube (uint3 id, float3 position, float4 color) {
 
 float3 Wave (float u, float v, float t) {
 	float3 p;
-	p.x = u;
-	p.y = sin(PI * (u + v + t));
-	p.z = v;
+	//p.x = u * (float)_Resolution;
+	//p.y = sin(PI * (u + v + t));
+	//p.z = v * (float)_Resolution;
+
+    float r = 0.9 + 0.1 * sin(PI * (6.0 * u + 4.0 * v + t));
+    r *= 10;
+	float s = r * cos(0.5 * PI * v);
+
+	p.x = s * sin(PI * u);
+	p.y = r * sin(0.5 * PI * v);
+	p.z = s * cos(PI * u);
 	return p;
 }
 
-[numthreads(4,4,1)]
+[numthreads(8,8,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
 
 
     float2 uv = GetUV(id);
 
-    SetCube(id, Wave(uv.x, uv.y, _Time), float4(1, 0, 0, 1));
+    SetCube(id, Wave(uv.x, uv.y, _Time), float4((float)id.x / _Resolution, (float)id.y / _Resolution, 0, 1));
     
 }

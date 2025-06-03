@@ -8,6 +8,7 @@ public struct Cube
     public Color color;
 }
 
+/*
 public class CubeObj
 {
     public CubeObj(GameObject obj)
@@ -19,6 +20,7 @@ public class CubeObj
     public GameObject obj;
     public Renderer renderer;
 }
+*/
 
 public class CumputeShaderCubeController : MonoBehaviour
 {
@@ -27,12 +29,16 @@ public class CumputeShaderCubeController : MonoBehaviour
     [Space(15f)]
     [SerializeField] int count = 50;
     [SerializeField] GameObject cubePrefab;
+    [SerializeField] Mesh cubeMesh;
+    [SerializeField] Material cubeMaterial; 
 
-    List<CubeObj> cubesObj;
+    //List<CubeObj> cubesObj;
 
     Cube[] cubeData;
 
     ComputeBuffer cubesBuffer;
+
+    Bounds bounds;
 
     float _time = 0;
 
@@ -57,7 +63,7 @@ public class CumputeShaderCubeController : MonoBehaviour
 
     void CreateAllCubes()
     {
-        cubesObj = new List<CubeObj>();
+        //cubesObj = new List<CubeObj>();
         cubeData = new Cube[count * count];
 
         for (int x = 0; x < count; x++)
@@ -71,12 +77,12 @@ public class CumputeShaderCubeController : MonoBehaviour
 
     void CreateCube(int x, int y)
     {
-        GameObject cube = Instantiate(cubePrefab, new Vector3(x, 0, y), Quaternion.identity);
+        //GameObject cube = Instantiate(cubePrefab, new Vector3(x, 0, y), Quaternion.identity);
 
-        cubesObj.Add(new CubeObj(cube));
+        //cubesObj.Add(new CubeObj(cube));
 
         Cube data = new Cube();
-        data.position = cube.transform.position;
+        data.position = new Vector3(x, 0, y);
         data.color = Color.black;
 
         cubeData[x * count + y] = data;
@@ -94,6 +100,10 @@ public class CumputeShaderCubeController : MonoBehaviour
         computeShader.SetInt("_Resolution", count);
 
         _time = 0;
+
+        bounds = new Bounds(Vector3.zero, Vector3.one * count);
+
+        cubeMaterial.SetBuffer("cubes", cubesBuffer);
     }
 
     void UpdateComputeShader()
@@ -104,9 +114,9 @@ public class CumputeShaderCubeController : MonoBehaviour
 
         int groups = Mathf.CeilToInt((float)count / 8f);
 
-        computeShader.Dispatch(0, 1, 1, 1);
+        computeShader.Dispatch(0, groups, groups, 1);
 
-
+        /*
         cubesBuffer.GetData(cubeData);
 
         for (int i = 0; i < cubeData.Length; i++)
@@ -118,5 +128,8 @@ public class CumputeShaderCubeController : MonoBehaviour
             cubeObj.renderer.material.SetColor("_BaseColor", cubeData[i].color);
 
         }
+        */
+
+        Graphics.DrawMeshInstancedProcedural(cubeMesh, 0, cubeMaterial, bounds, cubeData.Length);
     }
 }

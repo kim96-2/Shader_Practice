@@ -153,8 +153,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   computeShader: {fileID: 7200000, guid: 4fa8e0b212328de4197339daf4dccddc, type: 3}
-  count: 4
+  count: 32
   cubePrefab: {fileID: 492590981}
+  cubeMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  cubeMaterial: {fileID: 2100000, guid: 3fa7effaae0915045b91b6fed5877367, type: 2}
 --- !u!4 &486348606
 Transform:
   m_ObjectHideFlags: 0
