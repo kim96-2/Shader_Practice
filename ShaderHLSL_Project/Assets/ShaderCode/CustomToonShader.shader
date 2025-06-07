@@ -28,6 +28,9 @@ Shader "ShaderCode/CustomToon"
 
         Pass
         {
+            Name "ForwardLit"
+            Tags{"LightMode" = "UniversalForward"}
+            
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag

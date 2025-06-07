@@ -28,6 +28,7 @@ public class CumputeShaderCubeController : MonoBehaviour
 
     [Space(15f)]
     [SerializeField] int count = 50;
+    [SerializeField] float radius = 10f;
     [SerializeField] GameObject cubePrefab;
     [SerializeField] Mesh cubeMesh;
     [SerializeField] Material cubeMaterial; 
@@ -98,6 +99,7 @@ public class CumputeShaderCubeController : MonoBehaviour
 
         computeShader.SetBuffer(0, "cubes", cubesBuffer);
         computeShader.SetInt("_Resolution", count);
+        computeShader.SetFloat("_Radius", radius);
 
         _time = 0;
 

@@ -12,6 +12,7 @@ struct Cube
 RWStructuredBuffer<Cube> cubes;
 
 uint _Resolution;
+float _Radius;
 float _Time;
 
 float2 GetUV (uint3 id) {
@@ -39,7 +40,7 @@ float3 Wave (float u, float v, float t) {
 	//p.z = v * (float)_Resolution;
 
     float r = 0.9 + 0.1 * sin(PI * (6.0 * u + 4.0 * v + t));
-    r *= 10;
+    r *= _Radius;
 	float s = r * cos(0.5 * PI * v);
 
 	p.x = s * sin(PI * u);
