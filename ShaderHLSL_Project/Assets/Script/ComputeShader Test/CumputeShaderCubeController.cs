@@ -22,16 +22,26 @@ public class CubeObj
 }
 */
 
+public enum KernelFunc
+{
+    Wave,
+    Ripple,
+    Sphere,
+    Torus
+}
+
 public class CumputeShaderCubeController : MonoBehaviour
 {
     public ComputeShader computeShader;
+    [SerializeField] Material cubeMaterial;
 
-    [Space(15f)]
-    [SerializeField] int count = 50;
+    [Header("Update Settings")]
+    const int maxCount = 512;
+    [SerializeField, Range(8, maxCount)] int count = 50;
     [SerializeField] float radius = 10f;
-    [SerializeField] GameObject cubePrefab;
+    //[SerializeField] GameObject cubePrefab;
     [SerializeField] Mesh cubeMesh;
-    [SerializeField] Material cubeMaterial; 
+    [SerializeField] KernelFunc kernelFunc;
 
     //List<CubeObj> cubesObj;
 
@@ -65,11 +75,11 @@ public class CumputeShaderCubeController : MonoBehaviour
     void CreateAllCubes()
     {
         //cubesObj = new List<CubeObj>();
-        cubeData = new Cube[count * count];
+        cubeData = new Cube[maxCount * maxCount];
 
-        for (int x = 0; x < count; x++)
+        for (int x = 0; x < maxCount; x++)
         {
-            for (int y = 0; y < count; y++)
+            for (int y = 0; y < maxCount; y++)
             {
                 CreateCube(x, y);
             }
@@ -86,7 +96,7 @@ public class CumputeShaderCubeController : MonoBehaviour
         data.position = new Vector3(x, 0, y);
         data.color = Color.black;
 
-        cubeData[x * count + y] = data;
+        cubeData[x * maxCount + y] = data;
     }
 
     void InitComputeShader()
@@ -96,10 +106,6 @@ public class CumputeShaderCubeController : MonoBehaviour
         cubesBuffer = new ComputeBuffer(cubeData.Length, structSize);
 
         cubesBuffer.SetData(cubeData);
-
-        computeShader.SetBuffer(0, "cubes", cubesBuffer);
-        computeShader.SetInt("_Resolution", count);
-        computeShader.SetFloat("_Radius", radius);
 
         _time = 0;
 
@@ -113,10 +119,15 @@ public class CumputeShaderCubeController : MonoBehaviour
         _time += Time.deltaTime;
 
         computeShader.SetFloat("_Time", _time);
+        computeShader.SetInt("_Resolution", count);
+        computeShader.SetFloat("_Radius", radius);
+        computeShader.SetMatrix("_ModelMatrix", transform.localToWorldMatrix);
 
         int groups = Mathf.CeilToInt((float)count / 8f);
 
-        computeShader.Dispatch(0, groups, groups, 1);
+        
+        computeShader.SetBuffer((int)kernelFunc, "cubes", cubesBuffer);
+        computeShader.Dispatch((int)kernelFunc, groups, groups, 1);
 
         /*
         cubesBuffer.GetData(cubeData);
@@ -132,6 +143,6 @@ public class CumputeShaderCubeController : MonoBehaviour
         }
         */
 
-        Graphics.DrawMeshInstancedProcedural(cubeMesh, 0, cubeMaterial, bounds, cubeData.Length);
+        Graphics.DrawMeshInstancedProcedural(cubeMesh, 0, cubeMaterial, bounds, count * count);
     }
 }

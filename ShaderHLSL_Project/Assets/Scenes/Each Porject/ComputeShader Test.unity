@@ -153,11 +153,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   computeShader: {fileID: 7200000, guid: 4fa8e0b212328de4197339daf4dccddc, type: 3}
+  cubeMaterial: {fileID: 2100000, guid: 3fa7effaae0915045b91b6fed5877367, type: 2}
   count: 64
   radius: 15
-  cubePrefab: {fileID: 492590981}
   cubeMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
-  cubeMaterial: {fileID: 2100000, guid: 3fa7effaae0915045b91b6fed5877367, type: 2}
+  kernelFunc: 0
 --- !u!4 &486348606
 Transform:
   m_ObjectHideFlags: 0
@@ -403,7 +403,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!64 &1399467414
 MeshCollider:
   m_ObjectHideFlags: 0
