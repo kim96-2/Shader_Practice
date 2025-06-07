@@ -50,8 +50,9 @@ Shader "ShaderCode/InstanceCubeShader"
             struct Varyings
             {
                 float4 positionCS   : SV_POSITION;
-                float3 normalWS     : TEXCOORD0;
-                float3 color        : TEXCOORD1;
+                float3 positionWS   : TEXCOORD0;
+                float3 normalWS     : TEXCOORD1;
+                float3 color        : TEXCOORD2;
 
             };
 
@@ -71,7 +72,7 @@ Shader "ShaderCode/InstanceCubeShader"
 
                 Varyings OUT;
                 OUT.positionCS = TransformWorldToHClip(worldPosition);
-                //OUT.pos = mul(UNITY_MATRIX_VP, float4(worldPosition, 1.0f));
+                OUT.positionWS = worldPosition;
 
                 OUT.normalWS = worldNormal;
 
@@ -82,11 +83,21 @@ Shader "ShaderCode/InstanceCubeShader"
 
             half4 frag (Varyings IN) : SV_Target
             {
-                Light mainLight = GetMainLight();
+                //Light mainLight = GetMainLight();
 
-                float NdotL = dot(mainLight.direction, IN.normalWS);
+                //float NdotL = dot(mainLight.direction, IN.normalWS);
 
-                return half4(IN.color * saturate(NdotL * 0.5 + 0.5), 1);
+                //return half4(IN.color * saturate(NdotL * 0.5 + 0.5), 1);
+
+                InputData inputData = (InputData)0;
+                inputData.positionWS = IN.positionWS;
+                inputData.normalWS = IN.normalWS;
+                inputData.viewDirectionWS = normalize(_WorldSpaceCameraPos - IN.positionWS);
+                inputData.bakedGI = SampleSH(IN.normalWS);
+
+                half4 color = UniversalFragmentBlinnPhong(inputData, IN.color, 1, 1, 0, 1, float3(0, 1, 0));
+
+                return color;
             }
 
             ENDHLSL
