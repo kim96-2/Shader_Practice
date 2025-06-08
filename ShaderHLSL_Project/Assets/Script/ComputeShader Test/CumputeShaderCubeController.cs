@@ -42,6 +42,7 @@ public class CumputeShaderCubeController : MonoBehaviour
     //[SerializeField] GameObject cubePrefab;
     [SerializeField] Mesh cubeMesh;
     [SerializeField] KernelFunc kernelFunc;
+    int currentKernelFunc;
 
     //List<CubeObj> cubesObj;
 
@@ -112,6 +113,8 @@ public class CumputeShaderCubeController : MonoBehaviour
         bounds = new Bounds(Vector3.zero, Vector3.one * count);
 
         cubeMaterial.SetBuffer("cubes", cubesBuffer);
+
+        currentKernelFunc = (int)kernelFunc;
     }
 
     void UpdateComputeShader()
@@ -125,9 +128,17 @@ public class CumputeShaderCubeController : MonoBehaviour
 
         int groups = Mathf.CeilToInt((float)count / 8f);
 
-        
-        computeShader.SetBuffer((int)kernelFunc, "cubes", cubesBuffer);
-        computeShader.Dispatch((int)kernelFunc, groups, groups, 1);
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            currentKernelFunc = (currentKernelFunc - 1 + 4) % 4;
+        }
+        else if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            currentKernelFunc = (currentKernelFunc + 1 + 4) % 4;
+        }
+
+        computeShader.SetBuffer(currentKernelFunc, "cubes", cubesBuffer);
+        computeShader.Dispatch(currentKernelFunc, groups, groups, 1);
 
         /*
         cubesBuffer.GetData(cubeData);
