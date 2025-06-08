@@ -35,14 +35,19 @@ public class CumputeShaderCubeController : MonoBehaviour
     public ComputeShader computeShader;
     [SerializeField] Material cubeMaterial;
 
+    [Header("TransitionSetting")]
+    [SerializeField] float transitionDuration = 2f;
+    bool transitioning;
+
     [Header("Update Settings")]
     const int maxCount = 512;
     [SerializeField, Range(8, maxCount)] int count = 50;
     [SerializeField] float radius = 10f;
     //[SerializeField] GameObject cubePrefab;
     [SerializeField] Mesh cubeMesh;
-    [SerializeField] KernelFunc kernelFunc;
+    //[SerializeField] KernelFunc kernelFunc;
     int currentKernelFunc;
+    int nextKernelFunc;
 
     //List<CubeObj> cubesObj;
 
@@ -114,7 +119,8 @@ public class CumputeShaderCubeController : MonoBehaviour
 
         cubeMaterial.SetBuffer("cubes", cubesBuffer);
 
-        currentKernelFunc = (int)kernelFunc;
+        //currentKernelFunc = (int)kernelFunc;
+        StartCoroutine(ChangeRandomKernelFunc());
     }
 
     void UpdateComputeShader()
@@ -127,7 +133,8 @@ public class CumputeShaderCubeController : MonoBehaviour
         computeShader.SetMatrix("_ModelMatrix", transform.localToWorldMatrix);
 
         int groups = Mathf.CeilToInt((float)count / 8f);
-
+        /*
+        int current = currentKernelFunc;
         if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
             currentKernelFunc = (currentKernelFunc - 1 + 4) % 4;
@@ -136,9 +143,13 @@ public class CumputeShaderCubeController : MonoBehaviour
         {
             currentKernelFunc = (currentKernelFunc + 1 + 4) % 4;
         }
+        int kernelIndex = current + currentKernelFunc * 4;
+        */
 
-        computeShader.SetBuffer(currentKernelFunc, "cubes", cubesBuffer);
-        computeShader.Dispatch(currentKernelFunc, groups, groups, 1);
+        int kernelIndex = currentKernelFunc + nextKernelFunc * 4;
+
+        computeShader.SetBuffer(kernelIndex, "cubes", cubesBuffer);
+        computeShader.Dispatch(kernelIndex, groups, groups, 1);
 
         /*
         cubesBuffer.GetData(cubeData);
@@ -155,5 +166,54 @@ public class CumputeShaderCubeController : MonoBehaviour
         */
 
         Graphics.DrawMeshInstancedProcedural(cubeMesh, 0, cubeMaterial, bounds, count * count);
+    }
+
+    IEnumerator ChangeRandomKernelFunc()
+    {
+        currentKernelFunc = Random.Range(0, 4);
+        nextKernelFunc = currentKernelFunc;
+
+        yield return new WaitForSeconds(4f);
+
+        while (true)
+        {
+            nextKernelFunc = (currentKernelFunc + Random.Range(1, 4)) % 4;
+
+            Debug.Log(currentKernelFunc + " to " + nextKernelFunc);
+
+            yield return StartCoroutine(Transition());
+
+            currentKernelFunc = nextKernelFunc;
+
+            Debug.Log(currentKernelFunc + " to " + nextKernelFunc + "end");
+
+            yield return new WaitForSeconds(4f);
+        }
+    }
+
+    Coroutine transitionCoroutine;
+
+    void StartCoroutine()
+    {
+        if (transitionCoroutine != null)
+            StopCoroutine(transitionCoroutine);
+
+        transitionCoroutine = StartCoroutine(Transition());
+    }
+
+    IEnumerator Transition()
+    {
+        float _time = 0;
+
+        while (_time < transitionDuration)
+        {
+            computeShader.SetFloat("_TransitionProgress", Mathf.SmoothStep(1f, 0f, _time / transitionDuration));
+
+            _time += Time.deltaTime;
+
+            yield return null;
+        }
+
+        yield break;
     }
 }

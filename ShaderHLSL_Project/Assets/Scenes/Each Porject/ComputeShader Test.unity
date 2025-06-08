@@ -154,10 +154,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   computeShader: {fileID: 7200000, guid: 4fa8e0b212328de4197339daf4dccddc, type: 3}
   cubeMaterial: {fileID: 2100000, guid: 3fa7effaae0915045b91b6fed5877367, type: 2}
+  transitionDuration: 4
   count: 64
   radius: 15
   cubeMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
-  kernelFunc: 0
 --- !u!4 &486348606
 Transform:
   m_ObjectHideFlags: 0
@@ -560,8 +560,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1860512417}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalRotation: {x: -0.22096297, y: 0.18076377, z: -0.04172221, w: -0.9574754}
+  m_LocalPosition: {x: 11.983451, y: 16.342855, z: -31.561213}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

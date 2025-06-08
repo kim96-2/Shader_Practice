@@ -1,8 +1,24 @@
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel WaveKernel
+#pragma kernel WaveToRippleKernel
+#pragma kernel WaveToSphereKernel
+#pragma kernel WaveToTorusKernel
+
+#pragma kernel RippleToWaveKernel
 #pragma kernel RippleKernel
+#pragma kernel RippleToSphereKernel
+#pragma kernel RippleToTorusKernel
+
+#pragma kernel SphereToWaveKernel
+#pragma kernel SphereToRippleKernel
 #pragma kernel SphereKernel
+#pragma kernel SphereToTorusKernel
+
+#pragma kernel TorusToWaveKernel
+#pragma kernel TorusToRippleKernel
+#pragma kernel TorusToSphereKernel
 #pragma kernel TorusKernel
+
 
 #define PI 3.14159265358979323846
 
@@ -17,6 +33,7 @@ RWStructuredBuffer<Cube> cubes;
 uint _Resolution;
 float _Radius;
 float _Time;
+float _TransitionProgress;
 
 float4x4 _ModelMatrix;
 
@@ -94,8 +111,35 @@ float3 Torus (float u, float v, float t) {
 		SetCube(id, function(uv.x, uv.y, _Time), float4((float)id.x / _Resolution, (float)id.y / _Resolution, 0, 1)); \
 	}
 
+#define KERNEL_MORPH_FUNC(functionA, functionB) \
+	[numthreads(8, 8, 1)] \
+	void functionA##To##functionB##Kernel (uint3 id: SV_DispatchThreadID) \
+	{ \
+		float2 uv = GetUV(id); \
+		float3 position = lerp( \
+			functionA(uv.x, uv.y, _Time), functionB(uv.x, uv.y, _Time), \
+			_TransitionProgress \
+		); \
+		SetCube(id, position, float4((float)id.x / _Resolution, (float)id.y / _Resolution, 0, 1)); \
+	}
+
 KERNEL_FUNC(Wave)
 KERNEL_FUNC(Ripple)
 KERNEL_FUNC(Sphere)
 KERNEL_FUNC(Torus)
 
+KERNEL_MORPH_FUNC(Wave, Ripple)
+KERNEL_MORPH_FUNC(Wave, Sphere)
+KERNEL_MORPH_FUNC(Wave, Torus)
+
+KERNEL_MORPH_FUNC(Ripple, Wave)
+KERNEL_MORPH_FUNC(Ripple, Sphere)
+KERNEL_MORPH_FUNC(Ripple, Torus)
+
+KERNEL_MORPH_FUNC(Sphere, Wave)
+KERNEL_MORPH_FUNC(Sphere, Ripple)
+KERNEL_MORPH_FUNC(Sphere, Torus)
+
+KERNEL_MORPH_FUNC(Torus, Wave)
+KERNEL_MORPH_FUNC(Torus, Ripple)
+KERNEL_MORPH_FUNC(Torus, Sphere)
