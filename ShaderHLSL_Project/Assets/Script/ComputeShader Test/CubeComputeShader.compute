@@ -1,8 +1,10 @@
 // Each #kernel tells which function to compile; you can have many kernels
-#pragma kernel WaveKernel
-#pragma kernel RippleKernel
-#pragma kernel SphereKernel
-#pragma kernel TorusKernel
+#pragma kernel LerpingKernel
+
+//#pragma kernel WaveKernel
+//#pragma kernel RippleKernel
+//#pragma kernel SphereKernel
+//#pragma kernel TorusKernel
 
 #define PI 3.14159265358979323846
 
@@ -15,10 +17,14 @@ struct Cube
 RWStructuredBuffer<Cube> cubes;
 
 uint _Resolution;
-float _Radius;
-float _Time;
+uint _PrevResolution;
 
-float4x4 _ModelMatrix;
+float _Radius;
+float4 _Time;
+
+//float4x4 _ModelMatrix;
+
+uint _FuncIndex;
 
 float2 GetUV (uint3 id) {
 	//return (id.xy / (float)_Resolution);
@@ -28,7 +34,8 @@ float2 GetUV (uint3 id) {
 void SetCube (uint3 id, float3 position, float4 color) {
     Cube cube;
     
-    cube.position = mul(_ModelMatrix, float4(position, 1)).xyz;
+    //cube.position = mul(_ModelMatrix, float4(position, 1)).xyz;
+	cube.position = position;
 
     cube.color = color;
 
@@ -86,16 +93,51 @@ float3 Torus (float u, float v, float t) {
 	return p * _Radius;
 }
 
+float3 SelectFunction(float2 uv, float t, uint func)
+{
+	switch(func)
+	{
+		case 0:
+			return Wave(uv.x, uv.y, t);
+		
+		case 1:
+			return Ripple(uv.x, uv.y, t);
+
+		case 2:
+			return Sphere(uv.x, uv.y, t);
+
+		case 3:
+			return Torus(uv.x, uv.y, t);
+		
+		default:
+			return float3(0,0,0);
+	}
+}
+
 #define KERNEL_FUNC(function) \
 	[numthreads(8,8,1)] \
 	void function##Kernel (uint3 id : SV_DispatchThreadID) \
 	{ \
 		float2 uv = GetUV(id); \
-		SetCube(id, function(uv.x, uv.y, _Time), float4((float)id.x / _Resolution, (float)id.y / _Resolution, 0, 1)); \
+		SetCube(id, function(uv.x, uv.y, _Time.x), float4((float)id.x / _Resolution, (float)id.y / _Resolution, 0, 1)); \
 	}
 
-KERNEL_FUNC(Wave)
-KERNEL_FUNC(Ripple)
-KERNEL_FUNC(Sphere)
-KERNEL_FUNC(Torus)
+[numthreads(8,8,1)]
+void LerpingKernel (uint3 id : SV_DispatchThreadID)
+{
+	if (id.x >= _Resolution || id.y >= _Resolution) return;
+
+	float2 uv = GetUV(id);
+
+	float3 prevPosition = cubes[id.x + id.y * _Resolution].position;
+	float3 nextPosition = SelectFunction(uv, _Time.x, _FuncIndex);
+	float3 position = (_Resolution == _PrevResolution) ? lerp(prevPosition, nextPosition, _Time.y * 2.0) : nextPosition;
+
+	SetCube(id, position, float4((float)id.x / _Resolution, (float)id.y / _Resolution, 0, 1));
+}
+
+//KERNEL_FUNC(Wave)
+//KERNEL_FUNC(Ripple)
+//KERNEL_FUNC(Sphere)
+//KERNEL_FUNC(Torus)
 

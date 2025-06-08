@@ -38,6 +38,8 @@ Shader "ShaderCode/InstanceCubeShader"
                 StructuredBuffer<Cube> cubes;
             #endif
 
+            float4x4 _ModelMatrix;
+
             struct Attributes
             {
                 float4 positionOS   : POSITION;
@@ -66,6 +68,8 @@ Shader "ShaderCode/InstanceCubeShader"
 
                 float3 localPosition = IN.positionOS.xyz;
                 float3 worldPosition = data.position.xyz + localPosition;
+                worldPosition = mul(_ModelMatrix, float4(worldPosition, 1)).xyz;
+
                 float3 worldNormal = TransformObjectToWorldNormal(IN.normalOS);
 
                 float3 color = data.color.rgb;
@@ -134,6 +138,8 @@ Shader "ShaderCode/InstanceCubeShader"
                 StructuredBuffer<Cube> cubes;
             #endif
 
+            float4x4 _ModelMatrix;
+
             struct Attributes
             {
                 float4 positionOS   : POSITION;
@@ -159,7 +165,7 @@ Shader "ShaderCode/InstanceCubeShader"
 
                 float3 localPosition = IN.positionOS.xyz;
                 float3 worldPosition = data.position.xyz + localPosition;
-
+                worldPosition = mul(_ModelMatrix, float4(worldPosition, 1)).xyz;
 
                 Varyings OUT;
                 OUT.positionCS = TransformWorldToHClip(worldPosition);

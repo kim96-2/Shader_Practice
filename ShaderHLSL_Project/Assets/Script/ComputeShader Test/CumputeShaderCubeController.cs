@@ -38,6 +38,8 @@ public class CumputeShaderCubeController : MonoBehaviour
     [Header("Update Settings")]
     const int maxCount = 512;
     [SerializeField, Range(8, maxCount)] int count = 50;
+    int prevCount = 0;
+
     [SerializeField] float radius = 10f;
     //[SerializeField] GameObject cubePrefab;
     [SerializeField] Mesh cubeMesh;
@@ -121,10 +123,15 @@ public class CumputeShaderCubeController : MonoBehaviour
     {
         _time += Time.deltaTime;
 
-        computeShader.SetFloat("_Time", _time);
+        computeShader.SetVector("_Time", new Vector4(_time, Time.deltaTime, 0, 0));
+     
         computeShader.SetInt("_Resolution", count);
+        computeShader.SetInt("_PrevResolution", prevCount);
+        prevCount = count;
+
         computeShader.SetFloat("_Radius", radius);
-        computeShader.SetMatrix("_ModelMatrix", transform.localToWorldMatrix);
+
+        cubeMaterial.SetMatrix("_ModelMatrix", transform.localToWorldMatrix);
 
         int groups = Mathf.CeilToInt((float)count / 8f);
 
@@ -137,8 +144,10 @@ public class CumputeShaderCubeController : MonoBehaviour
             currentKernelFunc = (currentKernelFunc + 1 + 4) % 4;
         }
 
-        computeShader.SetBuffer(currentKernelFunc, "cubes", cubesBuffer);
-        computeShader.Dispatch(currentKernelFunc, groups, groups, 1);
+        computeShader.SetInt("_FuncIndex", currentKernelFunc);
+
+        computeShader.SetBuffer(0, "cubes", cubesBuffer);
+        computeShader.Dispatch(0, groups, groups, 1);
 
         /*
         cubesBuffer.GetData(cubeData);
