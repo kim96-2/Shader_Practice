@@ -1,0 +1,59 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+struct Particle
+{
+	float3 position;
+	float3 velocity;
+	float life;
+};
+
+RWStructuredBuffer<Particle> _ParticleBuffer;
+
+float _Time;
+float4 _TargetPosition;
+
+uint rng_state;
+uint rand_xorshift()
+{
+	// Xorshift algorithm from George Marsaglia's paper
+	rng_state ^= (rng_state << 13);
+	rng_state ^= (rng_state >> 17);
+	rng_state ^= (rng_state << 5);
+	return rng_state;
+}
+
+void respawn(uint id)
+{
+	rng_state = id;
+	float tmp = (1.0 / 4294967296.0);
+	float f0 = float(rand_xorshift()) * tmp - 0.5;
+	float f1 = float(rand_xorshift()) * tmp - 0.5;
+    float f2 = float(rand_xorshift()) * tmp - 0.5;
+	//float f2 = float(rand_xorshift()) * tmp - 0.5;
+	float3 normalF3 = normalize(float3(f0, f1, f2)) * 0.8f;
+	float3 randPos = normalF3 * float(rand_xorshift()) * tmp;
+	_ParticleBuffer[id].position = randPos + _TargetPosition.xyz;
+	// reset the life of this particle
+	_ParticleBuffer[id].life = 4;
+	_ParticleBuffer[id].velocity = normalF3 * 5.0;
+}
+
+[numthreads(256,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    Particle particle = _ParticleBuffer[id.x];
+    particle.life -= _Time;
+
+
+    float3 dir = _TargetPosition.xyz - particle.position;
+    float3 normalizeDir = normalize(dir);
+
+    //particle.velocity += normalizeDir * max(dot(dir, dir), 5.0) / 5.0;
+    particle.velocity += normalizeDir * 0.1 / min(dot(dir, dir), 0.1);
+    particle.position += particle.velocity * _Time;
+
+    _ParticleBuffer[id.x] = particle;
+
+    if (particle.life < 0) respawn(id.x);
+}
