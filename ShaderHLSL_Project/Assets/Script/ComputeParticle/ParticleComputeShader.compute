@@ -5,55 +5,192 @@ struct Particle
 {
 	float3 position;
 	float3 velocity;
-	float life;
+	float headAmount;
+	float colorAmount;
 };
+
+struct Obsticle
+{
+	float3 position;
+	float size;
+};
+
+StructuredBuffer<Obsticle> _ObsticleBuffer;
+int _ObsticleCount;
 
 RWStructuredBuffer<Particle> _ParticleBuffer;
 
-float _Time;
-float4 _TargetPosition;
+int _ParticleCount;
+float _NearRadius;
 
-uint rng_state;
-uint rand_xorshift()
+float4 _SACParams;
+#define SEPARATION_AMOUNT _SACParams.x
+#define ALIGNMENT_AMOUNT _SACParams.y
+#define COHESION_AMOUNT _SACParams.z
+
+float _RandomPowerAmount;
+
+float4 _MainBoundary;
+
+float4 _Time;
+
+float2 unity_gradientNoise_dir(float2 p)
 {
-	// Xorshift algorithm from George Marsaglia's paper
-	rng_state ^= (rng_state << 13);
-	rng_state ^= (rng_state >> 17);
-	rng_state ^= (rng_state << 5);
-	return rng_state;
+    p = p % 289;
+    float x = (34 * p.x + 1) * p.x % 289 + p.y;
+    x = (34 * x + 1) * x % 289;
+    x = frac(x / 41) * 2 - 1;
+    return normalize(float2(x - floor(x + 0.5), abs(x) - 0.5));
 }
 
-void respawn(uint id)
+float unity_gradientNoise(float2 p)
 {
-	rng_state = id;
-	float tmp = (1.0 / 4294967296.0);
-	float f0 = float(rand_xorshift()) * tmp - 0.5;
-	float f1 = float(rand_xorshift()) * tmp - 0.5;
-    float f2 = float(rand_xorshift()) * tmp - 0.5;
-	//float f2 = float(rand_xorshift()) * tmp - 0.5;
-	float3 normalF3 = normalize(float3(f0, f1, f2)) * 0.8f;
-	float3 randPos = normalF3 * float(rand_xorshift()) * tmp;
-	_ParticleBuffer[id].position = randPos + _TargetPosition.xyz;
-	// reset the life of this particle
-	_ParticleBuffer[id].life = 4;
-	_ParticleBuffer[id].velocity = normalF3 * 5.0;
+    float2 ip = floor(p);
+    float2 fp = frac(p);
+    float d00 = dot(unity_gradientNoise_dir(ip), fp);
+    float d01 = dot(unity_gradientNoise_dir(ip + float2(0, 1)), fp - float2(0, 1));
+    float d10 = dot(unity_gradientNoise_dir(ip + float2(1, 0)), fp - float2(1, 0));
+    float d11 = dot(unity_gradientNoise_dir(ip + float2(1, 1)), fp - float2(1, 1));
+    fp = fp * fp * fp * (fp * (fp * 6 - 15) + 10);
+    return lerp(lerp(d00, d01, fp.y), lerp(d10, d11, fp.y), fp.x);
+}
+
+float Noise(float2 uv, float scale)
+{
+	return unity_gradientNoise(uv * scale) + 0.5;
+}
+
+Particle CalculateMainBoundary(Particle particle)
+{
+	float3 powerDir = (_MainBoundary.xyz - particle.position);
+	
+	float disFromBound = _MainBoundary.w - length(powerDir);
+	float speedDis = length(particle.velocity) * _Time.y * 2.0 + 2.0;
+
+	float powerAmount = max(1 / max(disFromBound - speedDis, 0.01) - 1 / 5.0, 0);
+	//float powerAmount = lerp(100.0, 1.0, saturate((disFromBound - speedDis) / 5.0));
+
+	particle.velocity += normalize(powerDir) * powerAmount * _Time.y * 10;
+
+	return particle;
+}
+
+Particle CalculateObsticle(Particle particle)
+{	
+	for(uint i = 0; i < (uint)_ObsticleCount; i++)
+	{
+		Obsticle obsticle = _ObsticleBuffer[i];
+
+		float3 powerDir = (obsticle.position - particle.position);
+
+		float disFromObsticle = length(powerDir) - obsticle.size;
+		float speedDis = length(particle.velocity) * _Time.y + 2.0;
+
+		float powerAmount = max(1 / max(disFromObsticle - speedDis, 0.01) - 1 / 5.0, 0);
+		//float powerAmount = lerp(50.0, 1.0, saturate((disFromObsticle - speedDis) / 3.0));
+
+		particle.velocity -= normalize(powerDir) * powerAmount * _Time.y;
+	}
+
+
+	/*
+	for(uint i = 0; i < 1; i++)
+	{
+		//Obsticle obsticle = _ObsticleBuffer[i];
+
+		float3 powerDir = (float3(0,0,0) - particle.position);
+
+		float disFromObsticle = length(powerDir) - 10.0;
+		float speedDis = length(particle.velocity) * _Time.y + 2.0;
+
+		float powerAmount = max(1 / max(disFromObsticle - speedDis, 0.00001) - 1 / 5.0, 0);
+		//float powerAmount = lerp(100.0, 1.0, saturate((disFromObsticle - speedDis) / 10.0));
+
+		particle.velocity += normalize(powerDir) *  _Time.y * 100.0;
+	}
+	*/
+
+	return particle;
 }
 
 [numthreads(256,1,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
     Particle particle = _ParticleBuffer[id.x];
-    particle.life -= _Time;
+
+    float3 separation = 0;
+	float3 alignment = 0;
+	float3 cohesion = 0;
+
+	float nearbyColor = 1;
+
+	uint nearbyCount = 1;
+
+	for(uint i = 0; i < (uint)_ParticleCount; i++){
+		if(i == id.x) continue;
+
+		Particle tempParticle = _ParticleBuffer[i];
+
+		float3 offset = particle.position - tempParticle.position;
+		float dist = length(offset);
+
+		if(dist < _NearRadius)
+		{
+			dist = max(dist, 0.01);
+			separation += offset * (1.0 / dist - 1.0 / _NearRadius);
+			//separation += float3(1,0,0);
+
+			alignment +=tempParticle.velocity * max(tempParticle.headAmount - particle.headAmount, 0.1);
+			cohesion += tempParticle.position;
+
+			//nearbyColor += particle.colorAmount + (1 - dist / _NearRadius) * (tempParticle.colorAmount - particle.colorAmount);
+			//nearbyColor += lerp(0.5, 1, 1 - dist / _NearRadius);
+			nearbyColor += saturate(dot(normalize(particle.velocity), normalize(tempParticle.velocity)));
+
+			nearbyCount += 1;
+		}
+	}
+	
+
+	float avg = 1.0 / nearbyCount;
+	alignment *= avg;
+	cohesion *= avg;
+	cohesion = normalize(cohesion - particle.position);//if(nearbyCount != 1.0) 
+
+	float3 acceleration = alignment * ALIGNMENT_AMOUNT + separation * SEPARATION_AMOUNT + cohesion * COHESION_AMOUNT;
+	//float3 acceleration = separation * 10.0;
+	
+	particle.velocity += acceleration * _Time.y;
+
+	float3 randomDir = 0;
+	float2 rand = float2((float)id.x / _ParticleCount + _Time.x, (float)id.x / _ParticleCount);
+	randomDir.x = Noise(rand + 0.1, 1) * 2.0 - 1.0;
+	randomDir.y = Noise(rand + _Time.x, 1) * 2.0 - 1.0;
+    randomDir.z = Noise(rand + 2 * _Time.x, 1) * 2.0 - 1.0;
+
+	randomDir = normalize(randomDir) * _RandomPowerAmount;
+	particle.velocity += randomDir * _Time.y;
+
+	//particle.colorAmount = lerp(particle.colorAmount, nearbyColor * avg, _Time.y * 1);
+	//particle.colorAmount = nearbyColor * avg;
+	particle.colorAmount = frac(pow(nearbyColor / 100.0, 0.3) + frac(_Time.x / 20.0));
+
+	particle = CalculateObsticle(particle);
+
+	float speed = length(particle.velocity);
+	float3 dir = particle.velocity / speed;
+	speed = clamp(speed, 1.0, 20.0);
+	particle.velocity = speed * dir;
+	
+	
+	particle = CalculateMainBoundary(particle);
+	
+	//particle.velocity = lerp(normalize(particle.velocity), acceleration,  0.01);
+
+	particle.position += particle.velocity * _Time.y;
+
+	//if(dot(particle.position, particle.position) > 2500.0) particle.position *= -0.9;
 
 
-    float3 dir = _TargetPosition.xyz - particle.position;
-    float3 normalizeDir = normalize(dir);
-
-    //particle.velocity += normalizeDir * max(dot(dir, dir), 5.0) / 5.0;
-    particle.velocity += normalizeDir * 0.1 / min(dot(dir, dir), 0.1);
-    particle.position += particle.velocity * _Time;
-
-    _ParticleBuffer[id.x] = particle;
-
-    if (particle.life < 0) respawn(id.x);
+	_ParticleBuffer[id.x] = particle;
 }
