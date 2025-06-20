@@ -519,8 +519,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42e44014083a5804d9eefb11481da652, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fieldSize: 16
-  grassCount: 16
+  fieldSize: 1000
+  grassCount: 1024
   grassMaterial: {fileID: 2100000, guid: 8e6a13369798fd24390906451d75d830, type: 2}
   grassMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
   grassCullingComputeShader: {fileID: 7200000, guid: 1a044161ef8505d4d8375abe2efde11c, type: 3}

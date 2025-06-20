@@ -4,7 +4,7 @@
 #pragma kernel Compact
 #pragma kernel ResetArgs
 
-#define NUM_THREAD_GROUPS_X 64
+#define NUM_THREAD_GROUPS_X 256
 
 struct GrassData
 {

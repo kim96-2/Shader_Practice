@@ -101,14 +101,14 @@ public class ComputeGrassManager : MonoBehaviour
     void InitCullData()
     {
         uint threadX;
-        grassCullingComputeShader.GetKernelThreadGroupSizes(0, out threadX, out _, out _);
-        float voteThread = (float)threadX;
+        grassCullingComputeShader.GetKernelThreadGroupSizes(1, out threadX, out _, out _);
+        float scanThread = (float)threadX * 2;
 
-        numThreadGroups = Mathf.CeilToInt((grassCount * grassCount) / voteThread);
+        numThreadGroups = Mathf.CeilToInt((grassCount * grassCount) / scanThread);
 
-        if (numThreadGroups > voteThread)
+        if (numThreadGroups > scanThread)
         {
-            int powerOfTwo = (int)voteThread;
+            int powerOfTwo = (int)scanThread;
             while (powerOfTwo < numThreadGroups)
                 powerOfTwo *= 2;
 
@@ -116,14 +116,14 @@ public class ComputeGrassManager : MonoBehaviour
         }
         else
         {
-            while (voteThread % numThreadGroups != 0)
+            while (scanThread % numThreadGroups != 0)
                 numThreadGroups++;
         }
 
 
-        grassCullingComputeShader.GetKernelThreadGroupSizes(1, out threadX, out _, out _);
-        float scanThread = (float)threadX * 2;
-        numVoteThreadGroups = Mathf.CeilToInt(grassCount * grassCount / scanThread);
+        grassCullingComputeShader.GetKernelThreadGroupSizes(0, out threadX, out _, out _);
+        float voteThread = (float)threadX;
+        numVoteThreadGroups = Mathf.CeilToInt(grassCount * grassCount / voteThread);
 
         grassCullingComputeShader.GetKernelThreadGroupSizes(2, out threadX, out _, out _);
         float groupScanThread = (float)threadX;
@@ -135,8 +135,8 @@ public class ComputeGrassManager : MonoBehaviour
         groupSumArrayBuffer = new ComputeBuffer(numThreadGroups, _size);
         scannedGroupSumBuffer = new ComputeBuffer(numThreadGroups, _size);
 
-        Debug.Log(numThreadGroups + " " + voteThread);
-        Debug.Log(numVoteThreadGroups + " " + scanThread);
+        Debug.Log(numVoteThreadGroups + " " + voteThread);
+        Debug.Log(numThreadGroups + " " + scanThread);
         Debug.Log(numGroupScanThreadGroups + " " + groupScanThread);
 
     }
@@ -178,7 +178,7 @@ public class ComputeGrassManager : MonoBehaviour
         grassCullingComputeShader.Dispatch(1, numThreadGroups, 1, 1);
 
         // Scan Groups
-        grassCullingComputeShader.SetInt("_NumGroups", numVoteThreadGroups);
+        grassCullingComputeShader.SetInt("_NumGroups", numThreadGroups);
         grassCullingComputeShader.SetBuffer(2, "_GroupSumArrayIn", groupSumArrayBuffer);
         grassCullingComputeShader.SetBuffer(2, "_GroupSumArrayOut", scannedGroupSumBuffer);
         grassCullingComputeShader.Dispatch(2, numGroupScanThreadGroups, 1, 1);
@@ -190,7 +190,7 @@ public class ComputeGrassManager : MonoBehaviour
         grassCullingComputeShader.SetBuffer(3, "_ArgsBuffer", argsBuffer);
         grassCullingComputeShader.SetBuffer(3, "_CulledGrassOutputBuffer", culledGrassBuffer);
         grassCullingComputeShader.SetBuffer(3, "_GroupSumArray", scannedGroupSumBuffer);
-        grassCullingComputeShader.Dispatch(3, numVoteThreadGroups, 1, 1);
+        grassCullingComputeShader.Dispatch(3, numThreadGroups, 1, 1);
 
         //uint threadX;
         //grassCullingComputeShader.GetKernelThreadGroupSizes(3, out threadX, out _, out _);
