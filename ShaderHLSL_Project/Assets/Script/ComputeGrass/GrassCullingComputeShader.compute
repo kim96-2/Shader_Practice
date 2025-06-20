@@ -1,0 +1,179 @@
+#pragma kernel Vote
+#pragma kernel Scan
+#pragma kernel ScanGroupSums
+#pragma kernel Compact
+#pragma kernel ResetArgs
+
+#define NUM_THREAD_GROUPS_X 64
+
+struct GrassData
+{
+    float3 position;
+};
+
+RWStructuredBuffer<uint> _ArgsBuffer;
+StructuredBuffer<GrassData> _GrassDataBuffer;
+RWStructuredBuffer<uint> _VoteBuffer;
+RWStructuredBuffer<uint> _ScanBuffer;
+RWStructuredBuffer<uint> _GroupSumArray;
+RWStructuredBuffer<uint> _GroupSumArrayIn;
+RWStructuredBuffer<uint> _GroupSumArrayOut;
+RWStructuredBuffer<GrassData> _CulledGrassOutputBuffer;
+
+float4x4 Matrix_VP;
+groupshared uint temp[2 * NUM_THREAD_GROUPS_X];
+groupshared uint groupTemp[2 * 1024];
+
+int _NumGroups;
+
+[numthreads(128, 1, 1)]
+void Vote(uint3 id : SV_DispatchThreadID)
+{
+    float4 positionWS = float4(_GrassDataBuffer[id.x].position, 1);
+    float4 positionVS = mul(Matrix_VP, positionWS);
+
+    float3 positionCS = positionVS.xyz / - positionVS.w;
+
+    positionCS.x = positionCS.x / 2.0f + 0.5f;
+    positionCS.y = positionCS.y / 2.0f + 0.5f;
+    positionCS.z = -positionVS.w;
+
+    uint isIn = positionCS.x < -0.1 || positionCS.x > 1.1 ||
+                positionCS.y < -0.1 || positionCS.y > 1.1 ||
+                positionCS.z < -0.1 ? 0 : 1;
+
+    _VoteBuffer[id.x] = isIn;
+}
+
+
+[numthreads(NUM_THREAD_GROUPS_X, 1, 1)]
+void Scan(uint3 id :  SV_DispatchThreadID, uint3 groupID : SV_GroupID, uint3 groupThreadID : SV_GroupThreadID)
+{
+    int _id = (int)id.x;
+    int _groupTID = (int)groupThreadID.x;
+    int _groupID = (int)groupID.x;
+
+    int offset = 1;
+    temp[2 * _groupTID] = _VoteBuffer[2 * _id];
+    temp[2 * _groupTID + 1] = _VoteBuffer[2 * _id + 1];
+    
+    int numElements = 2 * NUM_THREAD_GROUPS_X;
+
+    int d;
+    for(d = numElements >> 1; d > 0; d = d >> 1)
+    {
+        GroupMemoryBarrierWithGroupSync();
+
+        if(_groupTID < d)
+        {
+            int t1 = offset * (2 * _groupTID + 1) - 1;
+            int t2 = offset * (2 * _groupTID + 2) - 1;
+
+            temp[t2] += temp[t1];
+        }
+
+        offset *= 2;
+    }
+
+    if (_groupTID == 0) {
+        _GroupSumArray[_groupID.x] = temp[numElements - 1];
+        temp[numElements - 1] = 0;
+    }
+
+    for (d = 1; d < numElements; d *= 2) {
+        offset >>= 1;
+
+        GroupMemoryBarrierWithGroupSync();
+
+        if(_groupTID < d)
+        {
+            int t1 = offset * (2 * _groupTID + 1) - 1;
+            int t2 = offset * (2 * _groupTID + 2) - 1;
+
+            int t = temp[t1];
+            temp[t1] = temp[t2];
+            temp[t2] += t;
+        }
+    }
+
+    GroupMemoryBarrierWithGroupSync();
+
+    _ScanBuffer[2 * _id] = temp[2 * _groupTID];
+    _ScanBuffer[2 * _id + 1] = temp[2 * _groupTID + 1];
+}
+
+[numthreads(1024, 1, 1)]
+void ScanGroupSums(uint3 id :  SV_DispatchThreadID, uint3 groupID : SV_GroupID, uint3 groupThreadID : SV_GroupThreadID)
+{
+    int _id = (int)id.x;
+    int _groupTID = (int)groupThreadID.x;
+    //int _groupID = (int)groupID.x;
+
+    int offset = 1;
+    groupTemp[2 * _groupTID] = _GroupSumArrayIn[2 * _id];
+    groupTemp[2 * _groupTID + 1] = _GroupSumArrayIn[2 * _id + 1];
+
+    int d;
+    for(d = _NumGroups >> 1; d > 0; d = d >> 1)
+    {
+        GroupMemoryBarrierWithGroupSync();
+
+        if(_groupTID < d)
+        {
+            int t1 = offset * (2 * _groupTID + 1) - 1;
+            int t2 = offset * (2 * _groupTID + 2) - 1;
+
+            groupTemp[t2] += groupTemp[t1];
+        }
+
+        offset *= 2;
+    }
+
+    if (_id == 0)
+        groupTemp[_NumGroups - 1] = 0;
+
+    for (d = 1; d < _NumGroups; d *= 2) {
+        offset >>= 1;
+
+        GroupMemoryBarrierWithGroupSync();
+
+        if(_id < d)
+        {
+            int t1 = offset * (2 * _groupTID + 1) - 1;
+            int t2 = offset * (2 * _groupTID + 2) - 1;
+
+            int t = groupTemp[t1];
+            groupTemp[t1] = groupTemp[t2];
+            groupTemp[t2] += t;
+        }
+    }
+
+    GroupMemoryBarrierWithGroupSync();
+
+    _GroupSumArrayOut[2 * _id] = groupTemp[2 * _id];
+    _GroupSumArrayOut[2 * _id + 1] = groupTemp[2 * _id + 1];
+
+}
+
+
+[numthreads(NUM_THREAD_GROUPS_X * 2, 1, 1)]
+void Compact(uint3 id :  SV_DispatchThreadID, uint3 groupID : SV_GroupID, uint3 groupThreadID : SV_GroupThreadID)
+{
+    uint _id = id.x;
+
+    uint _groupSum = groupID.x > 0 ? _GroupSumArray[groupID.x] : 0;
+
+    uint isIn = _VoteBuffer[_id];
+
+    if(isIn == 1)
+    {
+        InterlockedAdd(_ArgsBuffer[1], 1);
+
+        _CulledGrassOutputBuffer[_ScanBuffer[_id] + _groupSum] = _GrassDataBuffer[_id];
+    }
+}
+
+[numthreads(1, 1, 1)]
+void ResetArgs(uint3 id : SV_DispatchThreadID) {
+    _ArgsBuffer[1] = (uint)0;
+}
