@@ -126,8 +126,8 @@ public class ComputeGrassManager : MonoBehaviour
         numVoteThreadGroups = Mathf.CeilToInt(grassCount * grassCount / voteThread);
 
         grassCullingComputeShader.GetKernelThreadGroupSizes(2, out threadX, out _, out _);
-        float groupScanThread = (float)threadX;
-        numGroupScanThreadGroups = Mathf.CeilToInt(grassCount * grassCount / groupScanThread);
+        float groupScanThread = (float)threadX * 2;
+        numGroupScanThreadGroups = Mathf.CeilToInt(numVoteThreadGroups / groupScanThread);
 
         int _size = sizeof(uint);
         voteBuffer = new ComputeBuffer(grassCount * grassCount, _size);

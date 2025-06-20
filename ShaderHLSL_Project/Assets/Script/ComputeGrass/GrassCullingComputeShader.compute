@@ -103,7 +103,7 @@ void Scan(uint3 id :  SV_DispatchThreadID, uint3 groupID : SV_GroupID, uint3 gro
 }
 
 [numthreads(1024, 1, 1)]
-void ScanGroupSums(uint3 id :  SV_DispatchThreadID, uint3 groupID : SV_GroupID, uint3 groupThreadID : SV_GroupThreadID)
+void ScanGroupSums(uint3 id : SV_DispatchThreadID, uint3 groupID : SV_GroupID, uint3 groupThreadID : SV_GroupThreadID)
 {
     int _id = (int)id.x;
     int _groupTID = (int)groupThreadID.x;
