@@ -123,6 +123,67 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1001 &271223050
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 977dfe67292aee24e979a7725fbbe926, type: 3}
+      propertyPath: m_RootOrder
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 977dfe67292aee24e979a7725fbbe926, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 1.177525
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 977dfe67292aee24e979a7725fbbe926, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 977dfe67292aee24e979a7725fbbe926, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.14467347
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 977dfe67292aee24e979a7725fbbe926, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 977dfe67292aee24e979a7725fbbe926, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 977dfe67292aee24e979a7725fbbe926, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 977dfe67292aee24e979a7725fbbe926, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 977dfe67292aee24e979a7725fbbe926, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 977dfe67292aee24e979a7725fbbe926, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 977dfe67292aee24e979a7725fbbe926, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 977dfe67292aee24e979a7725fbbe926, type: 3}
+      propertyPath: m_Name
+      value: Grass
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 977dfe67292aee24e979a7725fbbe926, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 977dfe67292aee24e979a7725fbbe926, type: 3}
 --- !u!1001 &688113578
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -132,7 +193,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 451bf82d99caa9c4c9ba4b289694b085, type: 3}
       propertyPath: m_RootOrder
-      value: 5
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 451bf82d99caa9c4c9ba4b289694b085, type: 3}
       propertyPath: m_LocalPosition.x
@@ -177,6 +238,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 451bf82d99caa9c4c9ba4b289694b085, type: 3}
       propertyPath: m_Name
       value: grass_blade
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 451bf82d99caa9c4c9ba4b289694b085, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 451bf82d99caa9c4c9ba4b289694b085, type: 3}
@@ -348,7 +413,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: c9e728842449eb647ad69c11dc0947b4, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -483,12 +548,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1647009933}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 1, z: 0}
+  m_LocalScale: {x: 1, y: 2, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1828256593
 GameObject:
@@ -519,10 +584,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42e44014083a5804d9eefb11481da652, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fieldSize: 1000
+  fieldSize: 200
   grassCount: 1024
   grassMaterial: {fileID: 2100000, guid: 8e6a13369798fd24390906451d75d830, type: 2}
-  grassMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  grassMesh: {fileID: 8254687373856176130, guid: 977dfe67292aee24e979a7725fbbe926, type: 3}
+  windComputeShader: {fileID: 7200000, guid: bc1a2d65fd7242f44a81a445b9bde05b, type: 3}
+  mainWindFrequancy: 0.5
+  mainWindAmplitude: 3
+  turbPower: 2.3
+  turbSize: 3
+  mainWindAngle: 216
   grassCullingComputeShader: {fileID: 7200000, guid: 1a044161ef8505d4d8375abe2efde11c, type: 3}
 --- !u!4 &1828256595
 Transform:
@@ -617,8 +688,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1860512417}
-  m_LocalRotation: {x: 0.2928044, y: -0.22773115, z: 0.07205554, w: 0.92585754}
-  m_LocalPosition: {x: 7.5896754, y: 11.340824, z: -22.149517}
+  m_LocalRotation: {x: -0.023042932, y: 0.06922081, z: -0.0016012117, w: -0.99733394}
+  m_LocalPosition: {x: 2.2909164, y: 3.190462, z: -10.674789}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

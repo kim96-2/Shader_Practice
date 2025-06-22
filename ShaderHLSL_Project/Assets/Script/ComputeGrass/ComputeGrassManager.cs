@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 public class ComputeGrassManager : MonoBehaviour
@@ -7,8 +8,9 @@ public class ComputeGrassManager : MonoBehaviour
     struct GrassData
     {
         public Vector3 position;
+        public Vector3 windDirection;
     }
-    const int SIZE_GRASSDATA = 3 * sizeof(float);
+    readonly int SIZE_GRASSDATA = Marshal.SizeOf(typeof(GrassData));
     const int SIZE_ARGS = 5 * sizeof(uint);
 
     [Header("Grass Setting")]
@@ -17,6 +19,15 @@ public class ComputeGrassManager : MonoBehaviour
 
     [SerializeField] Material grassMaterial;
     [SerializeField] Mesh grassMesh;
+
+    [Header("Wind Setting")]
+    [SerializeField] ComputeShader windComputeShader;
+    [SerializeField] float mainWindFrequancy = 1f;
+    [SerializeField] float mainWindAmplitude = 1f;
+    [SerializeField] float turbPower = 2.3f;
+    [SerializeField] float turbSize = 3.0f;
+
+    [SerializeField, Range(0f, 360f)] float mainWindAngle;
 
 
     [Space(10f)]
@@ -39,6 +50,7 @@ public class ComputeGrassManager : MonoBehaviour
         InitCullData();
         InitGrassData();
         InitMaterial();
+        InitWind();
     }
 
     void Update()
@@ -72,10 +84,17 @@ public class ComputeGrassManager : MonoBehaviour
             for (int x = 0; x < grassCount; x++)
             {
                 Vector3 pos = new Vector3(
-                    x * fieldSize / (float)grassCount - fieldSize / 2f,
+                    (x + Random.value * 1f) * fieldSize / (float)grassCount - fieldSize / 2f,
                     0,
-                    y * fieldSize / (float)grassCount - fieldSize / 2f
+                    (y + Random.value * 1f) * fieldSize / (float)grassCount - fieldSize / 2f
                 );
+
+                // Vector3 pos = new Vector3(
+                //     x + Random.value * 0.05f,
+                //     0,
+                //     y + Random.value * 0.05f
+                // );
+                // pos *= fieldSize / (float)grassCount - fieldSize / 2f;
 
                 //grassDatas[y * grassCount + x].position = Vector3.zero;
                 grassDatas[y * grassCount + x].position = pos;
@@ -144,10 +163,18 @@ public class ComputeGrassManager : MonoBehaviour
     void InitMaterial()
     {
         grassMaterial.SetBuffer("_GrassBuffer", culledGrassBuffer);
+        //grassMaterial.SetBuffer("_GrassBuffer", totalGrassBuffer);
+    }
+
+    void InitWind()
+    {
+        //windComputeShader.SetBuffer(0, "_GrassDataBuffer", culledGrassBuffer);
+        windComputeShader.SetBuffer(0, "_GrassDataBuffer", totalGrassBuffer);
     }
 
     void UpdateGrassRendering()
     {
+        UpdateWind();
         CullGrass();
 
         Graphics.DrawMeshInstancedIndirect(grassMesh, 0, grassMaterial, grassBounds, argsBuffer);
@@ -200,5 +227,27 @@ public class ComputeGrassManager : MonoBehaviour
         //uint[] temp = new uint[5];
         //argsBuffer.GetData(temp);
         //Debug.Log(temp[1] + " " + args[1]);
+    }
+
+    void UpdateWind()
+    {
+        windComputeShader.SetFloat("_Frequency", mainWindFrequancy);
+        windComputeShader.SetFloat("_Amplitude", mainWindAmplitude);
+
+        windComputeShader.SetFloat("_TurbPower", turbPower);
+        windComputeShader.SetFloat("_TurbSize", turbSize);
+
+        Vector3 mainWindDir = Quaternion.Euler(0, mainWindAngle, 0) * Vector3.forward;
+        Vector4 wind = new Vector4(mainWindDir.x, mainWindDir.y, mainWindDir.z, 0);
+        windComputeShader.SetVector("_MainWindDir", wind);
+
+        windComputeShader.SetFloat("_Time", Time.time);
+
+        uint[] temp = new uint[5];
+        argsBuffer.GetData(temp);
+
+        int groupSize = Mathf.CeilToInt((float)(grassCount * grassCount) / 128);
+        windComputeShader.Dispatch(0, groupSize, 1, 1);
+
     }
 }

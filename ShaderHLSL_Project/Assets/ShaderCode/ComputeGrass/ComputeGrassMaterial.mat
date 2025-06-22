@@ -25,6 +25,12 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
-    m_Floats: []
-    m_Colors: []
+    m_Floats:
+    - _AOAmount: 1
+    - _MaxHight: 0.7
+    - _MinHight: 0.4
+    m_Colors:
+    - _AOColor: {r: 0.074973285, g: 0.33962262, b: 0.16318971, a: 1}
+    - _Color: {r: 0.34970394, g: 1, b: 0.1372549, a: 1}
+    - _OldColor: {r: 0.7668383, g: 0.9716981, b: 0.1686721, a: 1}
   m_BuildTextureStacks: []
